@@ -10,25 +10,26 @@ datasource db {
 }
 
 model User {
-  id              Int     @id @default(autoincrement())
+  id              String  @id @default(cuid())
   phone           String  @unique
-    isActive    Boolean   @default(true)
+  isActive        Boolean @default(true)
   openid          String? @unique
   accessToken     String? // Cached Imou access token
   tokenExpireTime BigInt? // Token expiration timestamp
 
- lastLoginAt     DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   devices Device[]
- @@index([phone])
+
+  @@index([phone])
   @@index([openid])
 }
 
 model Device {
   id          Int      @id @default(autoincrement())
-  userId      Int
+  userId      String
   deviceId    String // Imou device serial number
   name        String?
   deviceModel String?
@@ -36,12 +37,46 @@ model Device {
   channels    Int      @default(1)
   bindCode    String? // Device verification code (encrypted)
   permissions String[] // Array of permissions: ['Ptz', 'Talk', 'Real', 'Config']
+  ftpUsername String?  @unique // FTP username for this device
+  ftpPassword String? // FTP password (encrypted)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id])
+  videos Video[]
 
   @@unique([userId, deviceId])
   @@index([userId])
   @@index([deviceId])
+}
+
+model Video {
+  id            Int      @id @default(autoincrement())
+  deviceId      Int
+  userId        String
+  filename      String
+  filepath      String // Relative path from FTP root
+  filesize      BigInt // Size in bytes
+  duration      Int? // Duration in seconds
+  thumbnailPath String?
+  recordedAt    DateTime // When video was recorded
+  uploadedAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([userId])
+  @@index([recordedAt])
+}
+
+model StorageQuota {
+  id         Int      @id @default(autoincrement())
+  userId     String   @unique
+  usedBytes  BigInt   @default(0)
+  limitBytes BigInt   @default(10737418240) // 10GB default
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
 }

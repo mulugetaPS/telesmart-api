@@ -1,10 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNotEmpty,
-  Matches,
-  Length,
-} from 'class-validator';
+import { IsString, IsNotEmpty, Length } from 'class-validator';
 import { EthiopianPhone } from 'src/common/decorators/phone.decorator';
 
 export class SendOtpDto {
@@ -45,7 +40,7 @@ export class UserResponseDto {
     description: 'User ID',
     example: 1,
   })
-  id: number;
+  id: string;
 
   @ApiProperty({
     description: 'User phone number',

@@ -1,0 +1,87 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Res,
+  StreamableFile,
+  NotFoundException,
+} from '@nestjs/common';
+import type { Response } from 'express';
+import { VideoService } from './video.service';
+import { CreateVideoDto, QueryVideosDto } from './dto';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { createReadStream, existsSync, statSync } from 'fs';
+import { join } from 'path';
+import { ConfigService } from '@nestjs/config';
+
+@ApiTags('Videos')
+@Controller('videos')
+export class VideoController {
+  constructor(
+    private readonly videoService: VideoService,
+    private readonly config: ConfigService,
+  ) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Record video upload' })
+  async create(@Body() createVideoDto: CreateVideoDto) {
+    return this.videoService.createVideo(createVideoDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get videos with filters' })
+  async findAll(@Query() query: QueryVideosDto) {
+    return this.videoService.getVideos(query);
+  }
+
+  @Get('storage/:userId')
+  @ApiOperation({ summary: 'Get storage quota for user' })
+  async getStorageQuota(@Param('userId') userId: string) {
+    return this.videoService.getStorageQuota(userId);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get video by ID' })
+  async findOne(@Param('id') id: string) {
+    return this.videoService.getVideoById(+id);
+  }
+
+  @Get(':id/stream')
+  @ApiOperation({ summary: 'Stream video file' })
+  async streamVideo(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const video = await this.videoService.getVideoById(+id);
+    const ftpRoot = this.config.get<string>('ftp.root');
+    if (!ftpRoot) {
+      throw new NotFoundException('FTP root not found');
+    }
+    const videoPath = join(ftpRoot, video.filepath);
+
+    if (!existsSync(videoPath)) {
+      throw new NotFoundException('Video file not found on server');
+    }
+
+    const stat = statSync(videoPath);
+    const fileStream = createReadStream(videoPath);
+
+    res.set({
+      'Content-Type': 'video/mp4',
+      'Content-Length': stat.size,
+      'Accept-Ranges': 'bytes',
+    });
+
+    return new StreamableFile(fileStream);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete video' })
+  async remove(@Param('id') id: string) {
+    return this.videoService.deleteVideo(+id);
+  }
+}

@@ -12,7 +12,7 @@ datasource db {
 model User {
   id              Int     @id @default(autoincrement())
   phone           String  @unique
-  openid          String
+  openid          String  @unique
   accessToken     String? // Cached Imou access token
   tokenExpireTime BigInt? // Token expiration timestamp
 

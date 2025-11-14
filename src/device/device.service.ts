@@ -173,6 +173,16 @@ export class DeviceService {
       throw new NotFoundException('Device not found');
     }
 
+    // Delete FTP credentials and system user
+    try {
+      await this.ftpService.deleteFtpCredentials(deviceId);
+      this.logger.log(`FTP user deleted for device: ${device.deviceId}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to delete FTP user: : ${message}`);
+      // Continue with device deletion even if FTP user deletion fails
+    }
+
     // Delete device (cascade will delete videos)
     await this.prisma.device.delete({
       where: { id: deviceId },

@@ -12,7 +12,7 @@ export class QueryVideosDto {
   @ApiProperty({ required: false, description: 'Filter by user ID' })
   @IsOptional()
   @IsInt()
-  userId?: string;
+  userId?: number;
 
   @ApiProperty({ required: false, description: 'Start date filter' })
   @IsOptional()

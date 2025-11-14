@@ -30,7 +30,11 @@ export class RegisterDeviceDto {
   @IsArray()
   permissions?: string[];
 
-  @ApiProperty({ description: 'Number of channels', required: false, default: 1 })
+  @ApiProperty({
+    description: 'Number of channels',
+    required: false,
+    default: 1,
+  })
   @IsOptional()
   @IsInt()
   channels?: number;

@@ -26,14 +26,14 @@ export class DeviceController {
   @ApiOperation({ summary: 'Register a new device for a user' })
   async register(
     @Body() registerDeviceDto: RegisterDeviceDto,
-    @Query('userId') userId: string,
+    @Query('userId') userId: number,
   ) {
     return this.deviceService.registerDevice(userId, registerDeviceDto);
   }
 
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get all devices for a user' })
-  async getUserDevices(@Param('userId') userId: string) {
+  async getUserDevices(@Param('userId') userId: number) {
     return this.deviceService.getUserDevices(userId);
   }
 

@@ -40,7 +40,7 @@ export class VideoController {
 
   @Get('storage/:userId')
   @ApiOperation({ summary: 'Get storage quota for user' })
-  async getStorageQuota(@Param('userId') userId: string) {
+  async getStorageQuota(@Param('userId') userId: number) {
     return this.videoService.getStorageQuota(userId);
   }
 

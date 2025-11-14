@@ -10,7 +10,7 @@ datasource db {
 }
 
 model User {
-  id              String  @id @default(cuid())
+  id              Int     @id @default(autoincrement())
   phone           String  @unique
   isActive        Boolean @default(true)
   openid          String? @unique
@@ -29,7 +29,7 @@ model User {
 
 model Device {
   id          Int      @id @default(autoincrement())
-  userId      String
+  userId      Int
   deviceId    String // Imou device serial number
   name        String?
   deviceModel String?
@@ -53,7 +53,7 @@ model Device {
 model Video {
   id            Int      @id @default(autoincrement())
   deviceId      Int
-  userId        String
+  userId        Int
   filename      String
   filepath      String // Relative path from FTP root
   filesize      BigInt // Size in bytes
@@ -72,7 +72,7 @@ model Video {
 
 model StorageQuota {
   id         Int      @id @default(autoincrement())
-  userId     String   @unique
+  userId     Int      @unique
   usedBytes  BigInt   @default(0)
   limitBytes BigInt   @default(10737418240) // 10GB default
   createdAt  DateTime @default(now())

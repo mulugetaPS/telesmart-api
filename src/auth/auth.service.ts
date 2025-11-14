@@ -15,7 +15,7 @@ import {
 } from './dto/auth.dto';
 
 type JwtPayload = {
-  sub: string;
+  sub: number;
   phone: string;
 };
 
@@ -98,7 +98,7 @@ export class AuthService {
   /**
    * Refresh access token
    */
-  async refreshToken(userId: string): Promise<RefreshTokenResponseDto> {
+  async refreshToken(userId: number): Promise<RefreshTokenResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -115,7 +115,7 @@ export class AuthService {
   /**
    * Validate user by ID (used by JWT strategy)
    */
-  async validateUser(userId: string): Promise<UserResponseDto> {
+  async validateUser(userId: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -130,7 +130,7 @@ export class AuthService {
   /**
    * Get user profile
    */
-  async getProfile(userId: string): Promise<UserResponseDto> {
+  async getProfile(userId: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -144,7 +144,7 @@ export class AuthService {
 
   // ==================== Private Helper Methods ====================
 
-  private generateToken(userId: string, phone: string): string {
+  private generateToken(userId: number, phone: string): string {
     const payload: JwtPayload = {
       sub: userId,
       phone,
@@ -153,7 +153,7 @@ export class AuthService {
   }
 
   private sanitizeUser(user: {
-    id: string;
+    id: number;
     phone: string;
     isActive: boolean;
     openid: string | null;

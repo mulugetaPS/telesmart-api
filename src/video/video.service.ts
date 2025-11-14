@@ -145,7 +145,7 @@ export class VideoService {
   /**
    * Get storage quota for user
    */
-  async getStorageQuota(userId: string) {
+  async getStorageQuota(userId: number) {
     let quota = await this.prisma.storageQuota.findUnique({
       where: { userId },
     });
@@ -168,7 +168,7 @@ export class VideoService {
   /**
    * Update storage quota
    */
-  private async updateStorageQuota(userId: string, bytesChange: bigint) {
+  private async updateStorageQuota(userId: number, bytesChange: bigint) {
     await this.prisma.storageQuota.upsert({
       where: { userId },
       update: {

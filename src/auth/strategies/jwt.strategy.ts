@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service';
 
 type JwtPayload = {
-  sub: string;
+  sub: number;
   phone: string;
 };
 

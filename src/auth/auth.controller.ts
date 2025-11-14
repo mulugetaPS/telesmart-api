@@ -77,7 +77,7 @@ export class AuthController {
     description: 'Unauthorized - Invalid or missing token',
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async getProfile(@GetUser('id') userId: string) {
+  async getProfile(@GetUser('id') userId: number) {
     return this.authService.getProfile(userId);
   }
 
@@ -95,7 +95,7 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized - User not found or inactive',
   })
-  async refreshToken(@GetUser('id') userId: string) {
+  async refreshToken(@GetUser('id') userId: number) {
     return this.authService.refreshToken(userId);
   }
 }

@@ -21,7 +21,7 @@ export class DeviceService {
   /**
    * Register a new device for a user
    */
-  async registerDevice(userId: string, registerDeviceDto: RegisterDeviceDto) {
+  async registerDevice(userId: number, registerDeviceDto: RegisterDeviceDto) {
     const { deviceId, name, deviceModel, bindCode, permissions } =
       registerDeviceDto;
 
@@ -68,7 +68,7 @@ export class DeviceService {
   /**
    * Get all devices for a user
    */
-  async getUserDevices(userId: string) {
+  async getUserDevices(userId: number) {
     return this.prisma.device.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -103,7 +103,7 @@ export class DeviceService {
   /**
    * Get device by deviceId and userId
    */
-  async getDeviceByDeviceId(userId: string, deviceId: string) {
+  async getDeviceByDeviceId(userId: number, deviceId: string) {
     const device = await this.prisma.device.findUnique({
       where: {
         userId_deviceId: {

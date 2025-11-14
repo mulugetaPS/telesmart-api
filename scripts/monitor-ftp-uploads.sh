@@ -4,7 +4,7 @@
 # This script watches for new video files and registers them in the database
 
 FTP_ROOT="/var/ftp"
-API_URL="http://localhost:3000/videos"
+API_URL="http://localhost:5000/videos"
 
 # Install inotify-tools if not present
 if ! command -v inotifywait &> /dev/null; then

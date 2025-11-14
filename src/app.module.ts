@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { VideoModule } from './video/video.module';
 import { FtpModule } from './ftp/ftp.module';
+import { DeviceModule } from './device/device.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { FtpModule } from './ftp/ftp.module';
     }),
     PrismaModule,
     AuthModule,
+    DeviceModule,
     VideoModule,
     FtpModule,
   ],

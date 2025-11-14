@@ -12,6 +12,7 @@ export class SendOtpDto {
 }
 
 export class VerifyOtpDto {
+  @ApiProperty({description: "Phone number"})
   @EthiopianPhone()
   phone: string;
 

@@ -1,4 +1,4 @@
-name: CI/CD Deploy Telesmart
+name: CI/CD Deploy Telesmart API
 
 on:
   push:
@@ -25,9 +25,9 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           host: ${{ secrets.VPS_HOST }}
           script: |
-            cd ~/telesmart 
+            cd ~/telesmart-api 
             git pull origin main
-            npm c --production 
+            npm ci --production 
             npx prisma generate 
             npm run build 
-            pm2 restart telesmart
+            pm2 restart telesmart-api

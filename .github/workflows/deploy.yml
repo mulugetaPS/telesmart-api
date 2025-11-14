@@ -1,0 +1,33 @@
+name: CI/CD Deploy Telesmart
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.VPS_USER }}
+          host: ${{ secrets.VPS_HOST }}
+          script: |
+            cd ~/telesmart 
+            git pull origin main
+            npm c --production 
+            npx prisma generate 
+            npm run build 
+            pm2 restart telesmart

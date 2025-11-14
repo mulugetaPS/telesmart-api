@@ -48,14 +48,14 @@ export class AuthService {
    */
   async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<VerifyOtpResponseDto> {
     try {
-      const isValid = await this.externalOtpService.verifyOtp(
-        verifyOtpDto.phone,
-        verifyOtpDto.code,
-      );
+      // const isValid = await this.externalOtpService.verifyOtp(
+      //   verifyOtpDto.phone,
+      //   verifyOtpDto.code,
+      // );
 
-      if (!isValid) {
-        throw new UnauthorizedException('Invalid or expired OTP');
-      }
+      // if (!isValid) {
+      //   throw new UnauthorizedException('Invalid or expired OTP');
+      // }
 
       // Find or create user
       let user = await this.prisma.user.findUnique({

@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build-and-deploy:
+  test: 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -16,8 +16,31 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          
+          node-version: '22'
+          cache: 'npm' 
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Build
+        run: npm run build  # Test build locally too.
+
+  deploy:  # Updated: Only runs on pushes to main (not PRs)
+    needs: test  # Only deploy if tests pass.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'  # Restrict to main pushes.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -25,10 +48,13 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           host: ${{ secrets.VPS_HOST }}
           script: |
-            cd /var/www/telesmart-api 
+            set -e  # New: Exit on any command failure.
+            cd /var/www/telesmart-api
+            git stash push -m "Auto-stash before deploy" || true  # New: Stash local changes (ignores if nothing to stash).
             git pull origin main
-            npm ci 
-            npx prisma generate 
-            prisma migrate deploy
-            npm run build 
+            npm ci
+            npx prisma generate
+            npx prisma migrate deploy  # Prefixed with npx for safety.
+            npm run build
             pm2 restart telesmart-api
+            pm2 save  # New: Persist PM2 state across reboots.

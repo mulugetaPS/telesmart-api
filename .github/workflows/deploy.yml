@@ -25,7 +25,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           host: ${{ secrets.VPS_HOST }}
           script: |
-            cd ~/telesmart-api 
+            cd /var/www/telesmart-api 
             git pull origin main
             npm ci --production 
             npx prisma generate 

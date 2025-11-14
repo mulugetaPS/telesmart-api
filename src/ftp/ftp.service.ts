@@ -132,39 +132,22 @@ export class FtpService {
     username: string,
     password: string,
   ): Promise<void> {
-    const ftpRoot = this.config.get<string>('ftp.root', '/var/ftp');
-    const userDir = `${ftpRoot}/${username}`;
+    const scriptPath = this.config.get<string>(
+      'ftp.userManagerScript',
+      '/usr/local/bin/ftp-user-manager',
+    );
 
     try {
-      // Check if user already exists
-      try {
-        await execAsync(`id ${username}`);
-        this.logger.log(`User ${username} already exists, updating password`);
-        // User exists, just update password
-        await execAsync(`echo '${username}:${password}' | sudo chpasswd`);
-        return;
-      } catch {
-        // User doesn't exist, create it
-      }
-
-      // Create system user with no shell access
-      await execAsync(
-        `sudo useradd -m -d "${userDir}" -s /usr/sbin/nologin "${username}"`,
+      // Use the FTP user manager script
+      const { stdout, stderr } = await execAsync(
+        `sudo ${scriptPath} create "${username}" "${password}"`,
       );
 
-      // Set password
-      await execAsync(`echo '${username}:${password}' | sudo chpasswd`);
+      if (stderr && !stderr.includes('already exists')) {
+        this.logger.warn(`FTP user creation warning: ${stderr}`);
+      }
 
-      // Create user directory structure
-      await execAsync(`sudo mkdir -p "${userDir}/videos"`);
-
-      // Set ownership
-      await execAsync(`sudo chown -R ${username}:${username} "${userDir}"`);
-
-      // Set permissions
-      await execAsync(`sudo chmod 755 "${userDir}"`);
-
-      this.logger.log(`FTP user created successfully: ${username}`);
+      this.logger.log(`FTP user created: ${stdout.trim()}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Error creating FTP user: ${message}`);
@@ -176,18 +159,18 @@ export class FtpService {
    * Delete FTP user from the system
    */
   async deleteSystemFtpUser(username: string): Promise<void> {
-    try {
-      // Check if user exists
-      try {
-        await execAsync(`id ${username}`);
-      } catch {
-        this.logger.log(`User ${username} does not exist, skipping deletion`);
-        return;
-      }
+    const scriptPath = this.config.get<string>(
+      'ftp.userManagerScript',
+      '/usr/local/bin/ftp-user-manager',
+    );
 
-      // Delete user and home directory
-      await execAsync(`sudo userdel -r ${username}`);
-      this.logger.log(`FTP user deleted: ${username}`);
+    try {
+      // Use the FTP user manager script
+      const { stdout } = await execAsync(
+        `sudo ${scriptPath} delete "${username}"`,
+      );
+
+      this.logger.log(`FTP user deleted: ${stdout.trim()}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Error deleting FTP user: ${message}`);

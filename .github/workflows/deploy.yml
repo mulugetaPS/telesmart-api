@@ -29,5 +29,6 @@ jobs:
             git pull origin main
             npm ci --production 
             npx prisma generate 
+            prisma migrate deploy
             npm run build 
             pm2 restart telesmart-api

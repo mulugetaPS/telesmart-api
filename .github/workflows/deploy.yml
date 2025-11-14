@@ -27,7 +27,7 @@ jobs:
           script: |
             cd /var/www/telesmart-api 
             git pull origin main
-            npm ci --production 
+            npm ci 
             npx prisma generate 
             prisma migrate deploy
             npm run build 

@@ -49,16 +49,16 @@ export class DeviceController {
     return this.deviceService.getDeviceStats(+id);
   }
 
-  @Get(':id/ftp-credentials')
-  @ApiOperation({ summary: 'Get FTP credentials for device' })
-  async getFtpCredentials(@Param('id') id: string) {
-    return this.ftpService.getFtpCredentials(+id);
+  @Get('user/:userId/ftp-credentials')
+  @ApiOperation({ summary: 'Get FTP credentials for user' })
+  async getFtpCredentials(@Param('userId') userId: string) {
+    return this.ftpService.getFtpCredentials(+userId);
   }
 
-  @Post(':id/ftp-credentials/regenerate')
-  @ApiOperation({ summary: 'Regenerate FTP credentials for device' })
-  async regenerateFtpCredentials(@Param('id') id: string) {
-    return this.ftpService.generateFtpCredentials(+id);
+  @Post('user/:userId/ftp-credentials/regenerate')
+  @ApiOperation({ summary: 'Regenerate FTP credentials for user' })
+  async regenerateFtpCredentials(@Param('userId') userId: string) {
+    return this.ftpService.regenerateFtpCredentials(+userId);
   }
 
   @Put(':id')

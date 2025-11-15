@@ -16,6 +16,8 @@ model User {
   openid          String? @unique
   accessToken     String? // Cached Imou access token
   tokenExpireTime BigInt? // Token expiration timestamp
+  ftpUsername     String? @unique // FTP username for this user
+  ftpPassword     String? // FTP password (encrypted)
 
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
@@ -37,8 +39,6 @@ model Device {
   channels    Int      @default(1)
   bindCode    String? // Device verification code (encrypted)
   permissions String[] // Array of permissions: ['Ptz', 'Talk', 'Real', 'Config']
-  ftpUsername String?  @unique // FTP username for this device
-  ftpPassword String? // FTP password (encrypted)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

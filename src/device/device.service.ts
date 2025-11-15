@@ -39,6 +39,13 @@ export class DeviceService {
       throw new ConflictException('Device already registered for this user');
     }
 
+    // Check if this is the first device for the user
+    const deviceCount = await this.prisma.device.count({
+      where: { userId },
+    });
+
+    const isFirstDevice = deviceCount === 0;
+
     // Create device
     const device = await this.prisma.device.create({
       data: {
@@ -52,10 +59,21 @@ export class DeviceService {
       },
     });
 
-    // Generate FTP credentials for the device
-    const ftpCredentials = await this.ftpService.generateFtpCredentials(
-      device.id,
-    );
+    // Generate FTP credentials for the user (only on first device)
+    let ftpCredentials: {
+      ftpUsername: string;
+      ftpPassword: string;
+      ftpHost: string;
+      ftpPort: string;
+    } | null;
+    if (isFirstDevice) {
+      ftpCredentials = await this.ftpService.generateFtpCredentials(userId);
+      this.logger.log(`FTP credentials created for user ${userId}`);
+    } else {
+      // Get existing FTP credentials
+      ftpCredentials = await this.ftpService.getFtpCredentials(userId);
+      this.logger.log(`Using existing FTP credentials for user ${userId}`);
+    }
 
     this.logger.log(`Device registered: ${deviceId} for user ${userId}`);
 
@@ -173,20 +191,31 @@ export class DeviceService {
       throw new NotFoundException('Device not found');
     }
 
-    // Delete FTP credentials and system user
-    try {
-      await this.ftpService.deleteFtpCredentials(deviceId);
-      this.logger.log(`FTP user deleted for device: ${device.deviceId}`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to delete FTP user: : ${message}`);
-      // Continue with device deletion even if FTP user deletion fails
-    }
+    // Check if this is the last device for the user
+    const remainingDevices = await this.prisma.device.count({
+      where: {
+        userId: device.userId,
+        id: { not: deviceId },
+      },
+    });
 
     // Delete device (cascade will delete videos)
     await this.prisma.device.delete({
       where: { id: deviceId },
     });
+
+    // If this was the last device, delete FTP credentials
+    if (remainingDevices === 0) {
+      try {
+        await this.ftpService.deleteFtpCredentials(device.userId);
+        this.logger.log(
+          `FTP user deleted for user ${device.userId} (last device removed)`,
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(`Failed to delete FTP user: ${message}`);
+      }
+    }
 
     this.logger.log(
       `Device removed: ${device.deviceId} (${device._count.videos} videos deleted)`,
@@ -195,6 +224,7 @@ export class DeviceService {
     return {
       message: 'Device removed successfully',
       videosDeleted: device._count.videos,
+      ftpUserDeleted: remainingDevices === 0,
     };
   }
 

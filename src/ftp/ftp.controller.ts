@@ -7,15 +7,21 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 export class FtpController {
   constructor(private readonly ftpService: FtpService) {}
 
-  @Post('credentials/:deviceId')
-  @ApiOperation({ summary: 'Generate FTP credentials for a device' })
-  async generateCredentials(@Param('deviceId') deviceId: string) {
-    return this.ftpService.generateFtpCredentials(+deviceId);
+  @Get('user/:userId/credentials')
+  @ApiOperation({ summary: 'Get FTP credentials for a user' })
+  async getCredentials(@Param('userId') userId: string) {
+    return this.ftpService.getFtpCredentials(+userId);
   }
 
-  @Get('credentials/:deviceId')
-  @ApiOperation({ summary: 'Get FTP credentials for a device' })
-  async getCredentials(@Param('deviceId') deviceId: string) {
-    return this.ftpService.getFtpCredentials(+deviceId);
+  @Post('user/:userId/credentials/generate')
+  @ApiOperation({ summary: 'Generate FTP credentials for a user' })
+  async generateCredentials(@Param('userId') userId: string) {
+    return this.ftpService.generateFtpCredentials(+userId);
+  }
+
+  @Post('user/:userId/credentials/regenerate')
+  @ApiOperation({ summary: 'Regenerate FTP credentials for a user' })
+  async regenerateCredentials(@Param('userId') userId: string) {
+    return this.ftpService.regenerateFtpCredentials(+userId);
   }
 }

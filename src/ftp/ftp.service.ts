@@ -22,20 +22,30 @@ export class FtpService {
   }
 
   /**
-   * Generate FTP credentials for a device
+   * Generate FTP credentials for a user (called on first device registration)
    */
-  async generateFtpCredentials(deviceId: number) {
-    const device = await this.prisma.device.findUnique({
-      where: { id: deviceId },
-      include: { user: true },
+  async generateFtpCredentials(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    if (!device) {
-      throw new Error('Device not found');
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if user already has FTP credentials
+    if (user.ftpUsername && user.ftpPassword) {
+      this.logger.log(`User ${userId} already has FTP credentials`);
+      return {
+        ftpUsername: user.ftpUsername,
+        ftpPassword: this.decryptPassword(user.ftpPassword),
+        ftpHost: this.ftpHost,
+        ftpPort: this.ftpPort,
+      };
     }
 
     // Generate unique FTP username
-    const ftpUsername = `cam_${device.userId}_${device.deviceId}`;
+    const ftpUsername = `cam_user_${userId}`;
     const ftpPassword = this.generateSecurePassword();
 
     // Create FTP user on the system
@@ -48,9 +58,9 @@ export class FtpService {
       throw new Error('Failed to create FTP user on system');
     }
 
-    // Update device with FTP credentials
-    await this.prisma.device.update({
-      where: { id: deviceId },
+    // Update user with FTP credentials
+    await this.prisma.user.update({
+      where: { id: userId },
       data: {
         ftpUsername,
         ftpPassword: this.encryptPassword(ftpPassword),
@@ -66,20 +76,20 @@ export class FtpService {
   }
 
   /**
-   * Get FTP credentials for a device
+   * Get FTP credentials for a user
    */
-  async getFtpCredentials(deviceId: number) {
-    const device = await this.prisma.device.findUnique({
-      where: { id: deviceId },
+  async getFtpCredentials(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    if (!device || !device.ftpUsername || !device.ftpPassword) {
+    if (!user || !user.ftpUsername || !user.ftpPassword) {
       return null;
     }
 
     return {
-      ftpUsername: device.ftpUsername,
-      ftpPassword: this.decryptPassword(device.ftpPassword),
+      ftpUsername: user.ftpUsername,
+      ftpPassword: this.decryptPassword(user.ftpPassword),
       ftpHost: this.ftpHost,
       ftpPort: this.ftpPort,
     };
@@ -179,32 +189,43 @@ export class FtpService {
   }
 
   /**
-   * Delete device FTP credentials and system user
+   * Delete user FTP credentials and system user
    */
-  async deleteFtpCredentials(deviceId: number): Promise<void> {
-    const device = await this.prisma.device.findUnique({
-      where: { id: deviceId },
+  async deleteFtpCredentials(userId: number): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    if (!device || !device.ftpUsername) {
+    if (!user || !user.ftpUsername) {
       return;
     }
 
     // Delete system user
     try {
-      await this.deleteSystemFtpUser(device.ftpUsername);
+      await this.deleteSystemFtpUser(user.ftpUsername);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      this.logger.error(`Failed to delete system user: ${device.ftpUsername}`);
+      this.logger.error(`Failed to delete system user: ${user.ftpUsername}`);
     }
 
     // Clear credentials from database
-    await this.prisma.device.update({
-      where: { id: deviceId },
+    await this.prisma.user.update({
+      where: { id: userId },
       data: {
         ftpUsername: null,
         ftpPassword: null,
       },
     });
+  }
+
+  /**
+   * Regenerate FTP credentials for a user
+   */
+  async regenerateFtpCredentials(userId: number) {
+    // Delete existing credentials
+    await this.deleteFtpCredentials(userId);
+
+    // Generate new credentials
+    return this.generateFtpCredentials(userId);
   }
 }

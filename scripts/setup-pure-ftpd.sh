@@ -78,7 +78,7 @@ PGSQLPort        $DB_PORT
 PGSQLUser        $DB_USER
 PGSQLPassword    $DB_PASSWORD
 PGSQLDatabase    $DB_NAME
-PGSQLCrypt       md5
+PGSQLCrypt       any
 
 # Query to get password
 PGSQLGetPW       SELECT password FROM "FtpUser" WHERE username='\L' AND "isActive"=true

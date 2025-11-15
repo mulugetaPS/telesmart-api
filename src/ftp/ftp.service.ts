@@ -116,7 +116,7 @@ export class FtpService {
       ftpPort: this.ftpPort,
       homeDir: ftpUser.homeDir,
       isActive: ftpUser.isActive,
-      quotaSize: ftpUser.quotaSize,
+      quotaSize: ftpUser.quotaSize.toString(), // Convert BigInt to string for JSON
       lastLoginAt: ftpUser.lastLoginAt,
     };
   }

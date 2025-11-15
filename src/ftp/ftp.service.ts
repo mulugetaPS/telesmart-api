@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as fs from 'fs/promises';
 
 const execAsync = promisify(exec);
 
@@ -12,6 +13,7 @@ export class FtpService {
   private readonly logger = new Logger(FtpService.name);
   private readonly ftpHost: string;
   private readonly ftpPort: string;
+  private readonly ftpRoot: string;
 
   constructor(
     private prisma: PrismaService,
@@ -19,14 +21,17 @@ export class FtpService {
   ) {
     this.ftpHost = this.config.get<string>('ftp.host') || '';
     this.ftpPort = this.config.get<string>('ftp.port') || '';
+    this.ftpRoot = this.config.get<string>('ftp.root', '/var/ftp');
   }
 
   /**
    * Generate FTP credentials for a user (called on first device registration)
+   * Uses Pure-FTPd with PostgreSQL - no system users needed!
    */
   async generateFtpCredentials(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { ftpUser: true },
     });
 
     if (!user) {
@@ -34,64 +39,87 @@ export class FtpService {
     }
 
     // Check if user already has FTP credentials
-    if (user.ftpUsername && user.ftpPassword) {
+    if (user.ftpUser) {
       this.logger.log(`User ${userId} already has FTP credentials`);
       return {
-        ftpUsername: user.ftpUsername,
-        ftpPassword: this.decryptPassword(user.ftpPassword),
+        ftpUsername: user.ftpUser.username,
+        ftpPassword: user.ftpUser.password, // Return plain password (stored as MD5 hash)
         ftpHost: this.ftpHost,
         ftpPort: this.ftpPort,
+        homeDir: user.ftpUser.homeDir,
       };
     }
 
-    // Generate unique FTP username
+    // Generate unique FTP username and password
     const ftpUsername = `cam_user_${userId}`;
     const ftpPassword = this.generateSecurePassword();
+    const homeDir = `${this.ftpRoot}/${ftpUsername}`;
 
-    // Create FTP user on the system
+    // Hash password with MD5 for Pure-FTPd
+    const hashedPassword = crypto
+      .createHash('md5')
+      .update(ftpPassword)
+      .digest('hex');
+
+    // Create home directory
     try {
-      await this.createSystemFtpUser(ftpUsername, ftpPassword);
-      this.logger.log(`FTP system user created: ${ftpUsername} , pass: ${ftpPassword}`);
+      await this.createFtpDirectory(homeDir);
+      this.logger.log(`FTP directory created: ${homeDir}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to create FTP system user: ${message}`);
-      throw new Error('Failed to create FTP user on system');
+      this.logger.error(`Failed to create FTP directory: ${message}`);
+      throw new Error('Failed to create FTP directory');
     }
 
-    // Update user with FTP credentials
-    await this.prisma.user.update({
-      where: { id: userId },
+    // Create FTP user in database (Pure-FTPd will authenticate against this)
+    const ftpUser = await this.prisma.ftpUser.create({
       data: {
-        ftpUsername,
-        ftpPassword: this.encryptPassword(ftpPassword),
+        userId,
+        username: ftpUsername,
+        password: hashedPassword,
+        homeDir,
+        uid: 2001,
+        gid: 2001,
+        quotaSize: BigInt(10737418240), // 10GB default
       },
     });
 
+    this.logger.log(
+      `FTP user created in database: ${ftpUsername} (plain password for user: ${ftpPassword})`,
+    );
+
     return {
-      ftpUsername,
-      ftpPassword,
+      ftpUsername: ftpUser.username,
+      ftpPassword, // Return plain password to user
       ftpHost: this.ftpHost,
       ftpPort: this.ftpPort,
+      homeDir: ftpUser.homeDir,
     };
   }
 
   /**
    * Get FTP credentials for a user
+   * Note: Password is stored as MD5 hash, cannot be retrieved in plain text
+   * User must use the password provided during initial generation
    */
   async getFtpCredentials(userId: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+    const ftpUser = await this.prisma.ftpUser.findUnique({
+      where: { userId },
     });
 
-    if (!user || !user.ftpUsername || !user.ftpPassword) {
+    if (!ftpUser) {
       return null;
     }
 
     return {
-      ftpUsername: user.ftpUsername,
-      ftpPassword: this.decryptPassword(user.ftpPassword),
+      ftpUsername: ftpUser.username,
+      ftpPassword: '***hidden***', // Cannot retrieve plain password from MD5 hash
       ftpHost: this.ftpHost,
       ftpPort: this.ftpPort,
+      homeDir: ftpUser.homeDir,
+      isActive: ftpUser.isActive,
+      quotaSize: ftpUser.quotaSize,
+      lastLoginAt: ftpUser.lastLoginAt,
     };
   }
 
@@ -104,128 +132,149 @@ export class FtpService {
   }
 
   /**
-   * Encrypt passwordጵ
+   * Create FTP directory for user
+   * Creates the home directory and sets proper ownership
    */
-  private encryptPassword(password: string): string {
-    const secret = this.config.get<string>('ftp.encryptionKey');
-    if (!secret)
-      throw new Error('FTP_ENCRYPTION_KEY environment variable is not set');
-    const key = crypto.scryptSync(secret, 'salt', 32);
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-    let encrypted = cipher.update(password, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return iv.toString('hex') + ':' + encrypted;
-  }
-
-  /**
-   * Decrypt password
-   */
-  private decryptPassword(encryptedPassword: string): string {
-    const secret = this.config.get<string>('ftp.encryptionKey');
-    if (!secret)
-      throw new Error('FTP_ENCRYPTION_KEY environment variable is not set');
-    const key = crypto.scryptSync(secret, 'salt', 32);
-    const parts = encryptedPassword.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  }
-
-  /**
-   * Create FTP user on the system
-   */
-  private async createSystemFtpUser(
-    username: string,
-    password: string,
-  ): Promise<void> {
-    const scriptPath = this.config.get<string>(
-      'ftp.userManagerScript',
-      '/usr/local/bin/ftp-user-manager',
-    );
-
+  private async createFtpDirectory(homeDir: string): Promise<void> {
     try {
-      // Use the FTP user manager script
-      const { stdout, stderr } = await execAsync(
-        `sudo ${scriptPath} create "${username}" "${password}"`,
-      );
+      // Create directory
+      await fs.mkdir(homeDir, { recursive: true });
 
-      if (stderr && !stderr.includes('already exists')) {
-        this.logger.warn(`FTP user creation warning: ${stderr}`);
-      }
+      // Create subdirectories
+      await fs.mkdir(`${homeDir}/videos`, { recursive: true });
 
-      this.logger.log(`FTP user created: ${stdout.trim()}`);
+      // Set ownership to ftpuser:ftpuser (UID:GID 2001:2001)
+      await execAsync(`sudo chown -R ftpuser:ftpuser "${homeDir}"`);
+      await execAsync(`sudo chmod 755 "${homeDir}"`);
+
+      this.logger.log(`FTP directory created and configured: ${homeDir}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Error creating FTP user: ${message}`);
+      this.logger.error(`Error creating FTP directory: ${message}`);
       throw error;
     }
   }
 
   /**
-   * Delete FTP user from the system
+   * Delete FTP directory
    */
-  async deleteSystemFtpUser(username: string): Promise<void> {
-    const scriptPath = this.config.get<string>(
-      'ftp.userManagerScript',
-      '/usr/local/bin/ftp-user-manager',
-    );
-
+  private async deleteFtpDirectory(homeDir: string): Promise<void> {
     try {
-      // Use the FTP user manager script
-      const { stdout } = await execAsync(
-        `sudo ${scriptPath} delete "${username}"`,
-      );
-
-      this.logger.log(`FTP user deleted: ${stdout.trim()}`);
+      await execAsync(`sudo rm -rf "${homeDir}"`);
+      this.logger.log(`FTP directory deleted: ${homeDir}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Error deleting FTP user: ${message}`);
-      throw error;
+      this.logger.error(`Error deleting FTP directory: ${message}`);
     }
   }
 
   /**
-   * Delete user FTP credentials and system user
+   * Delete user FTP credentials and directory
    */
   async deleteFtpCredentials(userId: number): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+    const ftpUser = await this.prisma.ftpUser.findUnique({
+      where: { userId },
     });
 
-    if (!user || !user.ftpUsername) {
+    if (!ftpUser) {
       return;
     }
 
-    // Delete system user
+    // Delete FTP directory
     try {
-      await this.deleteSystemFtpUser(user.ftpUsername);
+      await this.deleteFtpDirectory(ftpUser.homeDir);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      this.logger.error(`Failed to delete system user: ${user.ftpUsername}`);
+      this.logger.error(`Failed to delete FTP directory: ${ftpUser.homeDir}`);
     }
 
-    // Clear credentials from database
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ftpUsername: null,
-        ftpPassword: null,
-      },
+    // Delete from database
+    await this.prisma.ftpUser.delete({
+      where: { userId },
     });
+
+    this.logger.log(`FTP user deleted: ${ftpUser.username}`);
   }
 
   /**
    * Regenerate FTP credentials for a user
+   * Creates new password and updates database
    */
   async regenerateFtpCredentials(userId: number) {
-    // Delete existing credentials
-    await this.deleteFtpCredentials(userId);
+    const ftpUser = await this.prisma.ftpUser.findUnique({
+      where: { userId },
+    });
 
-    // Generate new credentials
-    return this.generateFtpCredentials(userId);
+    if (!ftpUser) {
+      throw new Error('FTP user not found');
+    }
+
+    // Generate new password
+    const newPassword = this.generateSecurePassword();
+    const hashedPassword = crypto
+      .createHash('md5')
+      .update(newPassword)
+      .digest('hex');
+
+    // Update in database
+    await this.prisma.ftpUser.update({
+      where: { userId },
+      data: {
+        password: hashedPassword,
+        updatedAt: new Date(),
+      },
+    });
+
+    this.logger.log(`FTP password regenerated for user: ${ftpUser.username}`);
+
+    return {
+      ftpUsername: ftpUser.username,
+      ftpPassword: newPassword, // Return new plain password
+      ftpHost: this.ftpHost,
+      ftpPort: this.ftpPort,
+      homeDir: ftpUser.homeDir,
+    };
+  }
+
+  /**
+   * Update FTP user quota
+   */
+  async updateQuota(userId: number, quotaSize: bigint): Promise<void> {
+    await this.prisma.ftpUser.update({
+      where: { userId },
+      data: { quotaSize },
+    });
+
+    this.logger.log(`FTP quota updated for user ${userId}: ${quotaSize} bytes`);
+  }
+
+  /**
+   * Disable/Enable FTP user
+   */
+  async setUserActive(userId: number, isActive: boolean): Promise<void> {
+    await this.prisma.ftpUser.update({
+      where: { userId },
+      data: { isActive },
+    });
+
+    this.logger.log(`FTP user ${userId} ${isActive ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * List all FTP users
+   */
+  async listFtpUsers() {
+    return this.prisma.ftpUser.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            phone: true,
+            isActive: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

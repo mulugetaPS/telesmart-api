@@ -51,7 +51,7 @@ export class FtpService {
     // Create FTP user on the system
     try {
       await this.createSystemFtpUser(ftpUsername, ftpPassword);
-      this.logger.log(`FTP system user created: ${ftpUsername}`);
+      this.logger.log(`FTP system user created: ${ftpUsername} , pass: ${ftpPassword}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to create FTP system user: ${message}`);

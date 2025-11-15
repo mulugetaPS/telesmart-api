@@ -16,14 +16,15 @@ model User {
   openid          String? @unique
   accessToken     String? // Cached Imou access token
   tokenExpireTime BigInt? // Token expiration timestamp
-  ftpUsername     String? @unique // FTP username for this user
-  ftpPassword     String? // FTP password (encrypted)
+  ftpUsername     String? @unique // FTP username for this user (deprecated, use FtpUser model)
+  ftpPassword     String? // FTP password (deprecated, use FtpUser model)
 
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   devices Device[]
+  ftpUser FtpUser?
 
   @@index([phone])
   @@index([openid])
@@ -79,4 +80,28 @@ model StorageQuota {
   updatedAt  DateTime @updatedAt
 
   @@index([userId])
+}
+
+model FtpUser {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @unique
+  username          String    @unique
+  password          String // MD5 hash for Pure-FTPd
+  uid               Int       @default(2001)
+  gid               Int       @default(2001)
+  homeDir           String
+  uploadBandwidth   Int       @default(0) // KB/s, 0 = unlimited
+  downloadBandwidth Int       @default(0) // KB/s, 0 = unlimited
+  quotaSize         BigInt    @default(10737418240) // 10GB in bytes
+  quotaFiles        Int       @default(0) // 0 = unlimited
+  isActive          Boolean   @default(true)
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([username])
+  @@index([userId])
+  @@index([isActive])
 }

@@ -61,6 +61,27 @@ CREATE TABLE "StorageQuota" (
     CONSTRAINT "StorageQuota_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "FtpUser" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "username" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "uid" INTEGER NOT NULL DEFAULT 2001,
+    "gid" INTEGER NOT NULL DEFAULT 2001,
+    "homeDir" TEXT NOT NULL,
+    "uploadBandwidth" INTEGER NOT NULL DEFAULT 0,
+    "downloadBandwidth" INTEGER NOT NULL DEFAULT 0,
+    "quotaSize" BIGINT NOT NULL DEFAULT 10737418240,
+    "quotaFiles" INTEGER NOT NULL DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "lastLoginAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "FtpUser_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
 
@@ -100,8 +121,26 @@ CREATE UNIQUE INDEX "StorageQuota_userId_key" ON "StorageQuota"("userId");
 -- CreateIndex
 CREATE INDEX "StorageQuota_userId_idx" ON "StorageQuota"("userId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "FtpUser_userId_key" ON "FtpUser"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FtpUser_username_key" ON "FtpUser"("username");
+
+-- CreateIndex
+CREATE INDEX "FtpUser_username_idx" ON "FtpUser"("username");
+
+-- CreateIndex
+CREATE INDEX "FtpUser_userId_idx" ON "FtpUser"("userId");
+
+-- CreateIndex
+CREATE INDEX "FtpUser_isActive_idx" ON "FtpUser"("isActive");
+
 -- AddForeignKey
 ALTER TABLE "Device" ADD CONSTRAINT "Device_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Video" ADD CONSTRAINT "Video_deviceId_fkey" FOREIGN KEY ("deviceId") REFERENCES "Device"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FtpUser" ADD CONSTRAINT "FtpUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

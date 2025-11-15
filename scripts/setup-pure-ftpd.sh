@@ -106,8 +106,8 @@ chmod 600 /etc/pure-ftpd/db/postgresql.conf
 # Configure Pure-FTPd settings
 echo "Configuring Pure-FTPd settings..."
 
-# Enable PostgreSQL authentication
-echo "yes" > /etc/pure-ftpd/conf/PostgreSQLConfigFile
+# PostgreSQL authentication is enabled by default when using pure-ftpd-postgresql
+# The config file is automatically read from /etc/pure-ftpd/db/postgresql.conf
 
 # Disable anonymous login
 echo "no" > /etc/pure-ftpd/conf/NoAnonymous
@@ -128,13 +128,14 @@ echo "no" > /etc/pure-ftpd/conf/UnixAuthentication
 echo "40000 40100" > /etc/pure-ftpd/conf/PassivePortRange
 
 # Set umask for uploaded files
-echo "133:022" > /etc/pure-ftpd/conf/Umask
+echo "133 022" > /etc/pure-ftpd/conf/Umask
 
-# Allow user to overwrite files
-echo "yes" > /etc/pure-ftpd/conf/AllowUserFXP
+# Disable FXP (File eXchange Protocol) for security
+echo "no" > /etc/pure-ftpd/conf/AllowUserFXP
 
-# Display a welcome message
-echo "Welcome to Camera FTP Server" > /etc/pure-ftpd/conf/FortunesFile
+# Display a welcome message (optional - comment out if not needed)
+# echo "Welcome to Camera FTP Server" > /etc/pure-ftpd/welcome.txt
+# echo "/etc/pure-ftpd/welcome.txt" > /etc/pure-ftpd/conf/FortunesFile
 
 # Optional: Enable TLS (recommended for production)
 # echo "1" > /etc/pure-ftpd/conf/TLS

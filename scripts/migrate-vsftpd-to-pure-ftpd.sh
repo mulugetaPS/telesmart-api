@@ -14,7 +14,7 @@ echo "3. Help backup existing data"
 echo ""
 
 # Check if running as root
-if [ "$EEID" -ne 0 ]; then 
+if [ "$EUID" -ne 0 ]; then 
   echo "Please run as root (use sudo)"
   exit 1
 fi

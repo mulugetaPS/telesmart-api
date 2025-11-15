@@ -55,11 +55,9 @@ export class FtpService {
     const ftpPassword = this.generateSecurePassword();
     const homeDir = `${this.ftpRoot}/${ftpUsername}`;
 
-    // Hash password with MD5 for Pure-FTPd
-    const hashedPassword = crypto
-      .createHash('md5')
-      .update(ftpPassword)
-      .digest('hex');
+    // Hash password with MD5 crypt format for Pure-FTPd
+    // Pure-FTPd expects MD5 crypt format: $1$salt$hash
+    const hashedPassword = await this.hashPasswordMd5Crypt(ftpPassword);
 
     // Create home directory
     try {
@@ -129,6 +127,24 @@ export class FtpService {
   private generateSecurePassword(): string {
     const length = this.config.get<number>('ftp.passwordLength') || 16;
     return crypto.randomBytes(length).toString('base64').slice(0, length);
+  }
+
+  /**
+   * Hash password using MD5 crypt format for Pure-FTPd
+   * Uses openssl to generate MD5 crypt hash ($1$salt$hash)
+   */
+  private async hashPasswordMd5Crypt(password: string): Promise<string> {
+    try {
+      // Use openssl to generate MD5 crypt hash
+      const { stdout } = await execAsync(
+        `openssl passwd -1 "${password.replace(/"/g, '\\"')}"`,
+      );
+      return stdout.trim();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to hash password: ${message}`);
+      throw new Error('Failed to hash password');
+    }
   }
 
   /**
@@ -211,10 +227,7 @@ export class FtpService {
 
     // Generate new password
     const newPassword = this.generateSecurePassword();
-    const hashedPassword = crypto
-      .createHash('md5')
-      .update(newPassword)
-      .digest('hex');
+    const hashedPassword = await this.hashPasswordMd5Crypt(newPassword);
 
     // Update in database
     await this.prisma.ftpUser.update({

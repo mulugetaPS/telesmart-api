@@ -6,6 +6,7 @@ import {
   Body,
   Patch,
   UseGuards,
+  Param,
 } from '@nestjs/common';
 import { FtpService } from './ftp.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -56,6 +57,9 @@ export class FtpController {
     @CurrentUserId() userId: number,
     @Body('quotaSize') quotaSize: string,
   ) {
+    if (!quotaSize) {
+      throw new Error('quotaSize is required');
+    }
     await this.ftpService.updateQuota(userId, BigInt(quotaSize));
     return { message: 'Quota updated successfully' };
   }
@@ -70,9 +74,55 @@ export class FtpController {
     return { message: `User ${isActive ? 'enabled' : 'disabled'}` };
   }
 
+  @Get('quota-info')
+  @ApiOperation({
+    summary: 'Get quota information for the authenticated user',
+  })
+  async getMyQuotaInfo(@CurrentUserId() userId: number) {
+    return this.ftpService.getQuotaInfo(userId);
+  }
+
+  @Get('disk-usage')
+  @ApiOperation({
+    summary: 'Get disk usage for the authenticated user',
+  })
+  async getMyDiskUsage(@CurrentUserId() userId: number) {
+    const usedBytes = await this.ftpService.calculateDiskUsage(userId);
+    return {
+      userId,
+      usedBytes: usedBytes.toString(),
+      usedMB: (Number(usedBytes) / 1024 / 1024).toFixed(2),
+      usedGB: (Number(usedBytes) / 1024 / 1024 / 1024).toFixed(2),
+    };
+  }
+
   @Get('users')
   @ApiOperation({ summary: 'List all FTP users' })
   async listUsers() {
     return this.ftpService.listFtpUsers();
+  }
+
+  @Get('user/:userId/quota-info')
+  @ApiOperation({ summary: 'Get quota information for a user' })
+  async getQuotaInfo(@Param('userId') userId: string) {
+    return this.ftpService.getQuotaInfo(+userId);
+  }
+
+  @Get('quota-info/all')
+  @ApiOperation({ summary: 'Get quota information for all users' })
+  async getAllQuotaInfo() {
+    return this.ftpService.getAllQuotaInfo();
+  }
+
+  @Get('user/:userId/disk-usage')
+  @ApiOperation({ summary: 'Calculate actual disk usage for a user' })
+  async getDiskUsage(@Param('userId') userId: string) {
+    const usedBytes = await this.ftpService.calculateDiskUsage(+userId);
+    return {
+      userId: +userId,
+      usedBytes: usedBytes.toString(),
+      usedMB: (Number(usedBytes) / 1024 / 1024).toFixed(2),
+      usedGB: (Number(usedBytes) / 1024 / 1024 / 1024).toFixed(2),
+    };
   }
 }

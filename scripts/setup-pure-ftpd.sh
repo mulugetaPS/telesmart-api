@@ -92,13 +92,15 @@ PGSQLGetGID      SELECT gid FROM "FtpUser" WHERE username='\L' AND "isActive"=tr
 # Query to get home directory
 PGSQLGetDir      SELECT "homeDir" FROM "FtpUser" WHERE username='\L' AND "isActive"=true
 
-# Optional: Query to get quota
-# PGSQLGetQTAFS    SELECT "quotaSize" FROM "FtpUser" WHERE username='\L'
-# PGSQLGetQTAC     SELECT "quotaFiles" FROM "FtpUser" WHERE username='\L'
+# Query to get quota size (in Megabytes)
+PGSQLGetQTASZ    SELECT CAST("quotaSize" / 1048576 AS INTEGER) FROM "FtpUser" WHERE username='\L' AND "isActive"=true
 
-# Optional: Query to get bandwidth limits
-# PGSQLGetBandwidthUL  SELECT "uploadBandwidth" FROM "FtpUser" WHERE username='\L'
-# PGSQLGetBandwidthDL  SELECT "downloadBandwidth" FROM "FtpUser" WHERE username='\L'
+# Optional: Query to get quota files (max number of files)
+# PGSQLGetQTAFS    SELECT "quotaFiles" FROM "FtpUser" WHERE username='\L' AND "isActive"=true
+
+# Optional: Query to get bandwidth limits (in KB/s)
+# PGSQLGetBandwidthUL  SELECT "uploadBandwidth" FROM "FtpUser" WHERE username='\L' AND "isActive"=true
+# PGSQLGetBandwidthDL  SELECT "downloadBandwidth" FROM "FtpUser" WHERE username='\L' AND "isActive"=true
 EOF
 
 chmod 600 /etc/pure-ftpd/db/postgresql.conf

@@ -289,4 +289,111 @@ export class FtpService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  /**
+   * Calculate actual disk usage for a user's FTP directory
+   * Returns size in bytes
+   */
+  async calculateDiskUsage(userId: number): Promise<bigint> {
+    const ftpUser = await this.prisma.ftpUser.findUnique({
+      where: { userId },
+    });
+
+    if (!ftpUser) {
+      throw new Error('FTP user not found');
+    }
+
+    try {
+      // Use du command to get directory size in bytes
+      const { stdout } = await execAsync(
+        `du -sb "${ftpUser.homeDir}" | cut -f1`,
+      );
+      const sizeInBytes = BigInt(stdout.trim());
+
+      this.logger.log(
+        `Disk usage for ${ftpUser.username}: ${sizeInBytes} bytes`,
+      );
+
+      return sizeInBytes;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to calculate disk usage: ${message}`);
+      return BigInt(0);
+    }
+  }
+
+  /**
+   * Get quota information for a user
+   * Returns quota limit, used space, and available space
+   */
+  async getQuotaInfo(userId: number) {
+    const ftpUser = await this.prisma.ftpUser.findUnique({
+      where: { userId },
+    });
+
+    if (!ftpUser) {
+      throw new Error('FTP user not found');
+    }
+
+    const usedBytes = await this.calculateDiskUsage(userId);
+    const quotaBytes = ftpUser.quotaSize;
+    const availableBytes = quotaBytes - usedBytes;
+    const usagePercentage =
+      quotaBytes > 0 ? Number((usedBytes * BigInt(100)) / quotaBytes) : 0;
+
+    return {
+      username: ftpUser.username,
+      quotaLimit: quotaBytes.toString(),
+      quotaLimitGB: (Number(quotaBytes) / 1024 / 1024 / 1024).toFixed(2),
+      usedBytes: usedBytes.toString(),
+      usedGB: (Number(usedBytes) / 1024 / 1024 / 1024).toFixed(2),
+      availableBytes: availableBytes.toString(),
+      availableGB: (Number(availableBytes) / 1024 / 1024 / 1024).toFixed(2),
+      usagePercentage: usagePercentage.toFixed(2),
+      isOverQuota: usedBytes > quotaBytes,
+    };
+  }
+
+  /**
+   * Get quota information for all users
+   */
+  async getAllQuotaInfo() {
+    const ftpUsers = await this.prisma.ftpUser.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    const quotaInfoList = await Promise.all(
+      ftpUsers.map(async (ftpUser) => {
+        const usedBytes = await this.calculateDiskUsage(ftpUser.userId);
+        const quotaBytes = ftpUser.quotaSize;
+        const availableBytes = quotaBytes - usedBytes;
+        const usagePercentage =
+          quotaBytes > 0 ? Number((usedBytes * BigInt(100)) / quotaBytes) : 0;
+
+        return {
+          userId: ftpUser.userId,
+          username: ftpUser.username,
+          phone: ftpUser.user.phone,
+          quotaLimit: quotaBytes.toString(),
+          quotaLimitGB: (Number(quotaBytes) / 1024 / 1024 / 1024).toFixed(2),
+          usedBytes: usedBytes.toString(),
+          usedGB: (Number(usedBytes) / 1024 / 1024 / 1024).toFixed(2),
+          availableBytes: availableBytes.toString(),
+          availableGB: (Number(availableBytes) / 1024 / 1024 / 1024).toFixed(2),
+          usagePercentage: usagePercentage.toFixed(2),
+          isOverQuota: usedBytes > quotaBytes,
+          isActive: ftpUser.isActive,
+        };
+      }),
+    );
+
+    return quotaInfoList;
+  }
 }

@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { DeviceService } from './device.service';
 import { FtpService } from '../ftp/ftp.service';
 import { RegisterDeviceDto } from './dto/register-device.dto';
@@ -49,18 +40,6 @@ export class DeviceController {
     return this.deviceService.getDeviceStats(+id);
   }
 
-  @Get('user/:userId/ftp-credentials')
-  @ApiOperation({ summary: 'Get FTP credentials for user' })
-  async getFtpCredentials(@Param('userId') userId: string) {
-    return this.ftpService.getFtpCredentials(+userId);
-  }
-
-  @Post('user/:userId/ftp-credentials/regenerate')
-  @ApiOperation({ summary: 'Regenerate FTP credentials for user' })
-  async regenerateFtpCredentials(@Param('userId') userId: string) {
-    return this.ftpService.regenerateFtpCredentials(+userId);
-  }
-
   @Put(':id')
   @ApiOperation({ summary: 'Update device information' })
   async update(
@@ -74,11 +53,5 @@ export class DeviceController {
   @ApiOperation({ summary: 'Update device status' })
   async updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.deviceService.updateDeviceStatus(+id, status);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Remove device and all its videos' })
-  async remove(@Param('id') id: string) {
-    return this.deviceService.removeDevice(+id);
   }
 }

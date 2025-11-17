@@ -56,7 +56,6 @@ export class FtpService {
     const homeDir = `${this.ftpRoot}/${ftpUsername}`;
 
     // Hash password with MD5 crypt format for Pure-FTPd
-    // Pure-FTPd expects MD5 crypt format: $1$salt$hash
     const hashedPassword = await this.hashPasswordMd5Crypt(ftpPassword);
 
     // Create home directory
@@ -88,7 +87,7 @@ export class FtpService {
 
     return {
       ftpUsername: ftpUser.username,
-      ftpPassword, // Return plain password to user
+      ftpPassword,
       ftpHost: this.ftpHost,
       ftpPort: this.ftpPort,
       homeDir: ftpUser.homeDir,
@@ -111,12 +110,12 @@ export class FtpService {
 
     return {
       ftpUsername: ftpUser.username,
-      ftpPassword: '***hidden***', // Cannot retrieve plain password from MD5 hash
+      ftpPassword: '***hidden***',
       ftpHost: this.ftpHost,
       ftpPort: this.ftpPort,
       homeDir: ftpUser.homeDir,
       isActive: ftpUser.isActive,
-      quotaSize: ftpUser.quotaSize.toString(), // Convert BigInt to string for JSON
+      quotaSize: ftpUser.quotaSize.toString(),
       lastLoginAt: ftpUser.lastLoginAt,
     };
   }

@@ -13,13 +13,12 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 
-
 @ApiTags('FTP')
 @Controller('ftp')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class FtpController {
-  constructor(private readonly ftpService: FtpService) { }
+  constructor(private readonly ftpService: FtpService) {}
 
   @Get('credentials')
   @ApiOperation({ summary: 'Get FTP credentials for the authenticated user' })
@@ -58,6 +57,9 @@ export class FtpController {
     @CurrentUserId() userId: number,
     @Body('quotaSize') quotaSize: string,
   ) {
+    if (!quotaSize) {
+      throw new Error('quotaSize is required');
+    }
     await this.ftpService.updateQuota(userId, BigInt(quotaSize));
     return { message: 'Quota updated successfully' };
   }
@@ -70,6 +72,28 @@ export class FtpController {
   ) {
     await this.ftpService.setUserActive(userId, isActive);
     return { message: `User ${isActive ? 'enabled' : 'disabled'}` };
+  }
+
+  @Get('quota-info')
+  @ApiOperation({
+    summary: 'Get quota information for the authenticated user',
+  })
+  async getMyQuotaInfo(@CurrentUserId() userId: number) {
+    return this.ftpService.getQuotaInfo(userId);
+  }
+
+  @Get('disk-usage')
+  @ApiOperation({
+    summary: 'Get disk usage for the authenticated user',
+  })
+  async getMyDiskUsage(@CurrentUserId() userId: number) {
+    const usedBytes = await this.ftpService.calculateDiskUsage(userId);
+    return {
+      userId,
+      usedBytes: usedBytes.toString(),
+      usedMB: (Number(usedBytes) / 1024 / 1024).toFixed(2),
+      usedGB: (Number(usedBytes) / 1024 / 1024 / 1024).toFixed(2),
+    };
   }
 
   @Get('users')

@@ -43,7 +43,7 @@ export class FtpService {
       this.logger.log(`User ${userId} already has FTP credentials`);
       return {
         ftpUsername: user.ftpUser.username,
-        ftpPassword: user.ftpUser.password, // Return plain password (stored as MD5 hash)
+        ftpPassword: user.ftpUser.password,
         ftpHost: this.ftpHost,
         ftpPort: this.ftpPort,
         homeDir: user.ftpUser.homeDir,

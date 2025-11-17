@@ -1,12 +1,16 @@
-import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
 import { DeviceService } from './device.service';
 import { FtpService } from '../ftp/ftp.service';
 import { RegisterDeviceDto } from './dto/register-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('Devices')
 @Controller('devices')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class DeviceController {
   constructor(
     private readonly deviceService: DeviceService,
@@ -17,14 +21,14 @@ export class DeviceController {
   @ApiOperation({ summary: 'Register a new device for a user' })
   async register(
     @Body() registerDeviceDto: RegisterDeviceDto,
-    @Query('userId') userId: number,
+    @CurrentUserId() userId: number,
   ) {
     return this.deviceService.registerDevice(userId, registerDeviceDto);
   }
 
-  @Get('user/:userId')
-  @ApiOperation({ summary: 'Get all devices for a user' })
-  async getUserDevices(@Param('userId') userId: number) {
+  @Get()
+  @ApiOperation({ summary: 'Get all devices for the authenticated user' })
+  async getUserDevices(@CurrentUserId() userId: number) {
     return this.deviceService.getUserDevices(userId);
   }
 

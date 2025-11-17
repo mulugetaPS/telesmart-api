@@ -9,17 +9,22 @@ import {
   Res,
   StreamableFile,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { VideoService } from './video.service';
 import { CreateVideoDto, QueryVideosDto } from './dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { createReadStream, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('Videos')
 @Controller('videos')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class VideoController {
   constructor(
     private readonly videoService: VideoService,
@@ -38,9 +43,9 @@ export class VideoController {
     return this.videoService.getVideos(query);
   }
 
-  @Get('storage/:userId')
-  @ApiOperation({ summary: 'Get storage quota for user' })
-  async getStorageQuota(@Param('userId') userId: number) {
+  @Get('storage')
+  @ApiOperation({ summary: 'Get storage quota for the authenticated user' })
+  async getStorageQuota(@CurrentUserId() userId: number) {
     return this.videoService.getStorageQuota(userId);
   }
 

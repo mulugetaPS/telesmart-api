@@ -35,15 +35,19 @@ export class FtpWatcherService implements OnModuleInit, OnModuleDestroy {
   private startWatching() {
     this.logger.log(`Starting FTP directory watcher: ${this.ftpRoot}`);
 
-    // Watch all video files in FTP directories
-    this.watcher = chokidar.watch(`${this.ftpRoot}/*/videos/*.{mp4,avi,mkv,mov}`, {
-      persistent: true,
-      ignoreInitial: true, // Don't trigger for existing files
-      awaitWriteFinish: {
-        stabilityThreshold: 2000, // Wait 2s after file stops changing
-        pollInterval: 100,
+    // Watch all video files in user root directories
+    // Monitors: /var/ftp/cam_user_1/*.mp4
+    this.watcher = chokidar.watch(
+      `${this.ftpRoot}/*/*.{mp4,avi,mkv,mov,flv,wmv}`,
+      {
+        persistent: true,
+        ignoreInitial: true, // Don't trigger for existing files
+        awaitWriteFinish: {
+          stabilityThreshold: 2000, // Wait 2s after file stops changing
+          pollInterval: 100,
+        },
       },
-    });
+    );
 
     // File added
     this.watcher.on('add', async (filepath) => {
@@ -55,7 +59,7 @@ export class FtpWatcherService implements OnModuleInit, OnModuleDestroy {
       await this.handleDeletedVideo(filepath);
     });
 
-    this.logger.log('FTP directory watcher started');
+    this.logger.log('FTP directory watcher started - monitoring user root directories');
   }
 
   private async handleNewVideo(filepath: string) {
@@ -63,7 +67,7 @@ export class FtpWatcherService implements OnModuleInit, OnModuleDestroy {
       const filename = path.basename(filepath);
       const relativePath = path.relative(this.ftpRoot, filepath);
       
-      // Extract username from path: /var/ftp/cam_user_1/videos/file.mp4
+      // Extract username from path: /var/ftp/cam_user_1/file.mp4
       const pathParts = relativePath.split(path.sep);
       const username = pathParts[0];
 

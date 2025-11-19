@@ -155,9 +155,6 @@ export class FtpService {
       // Create directory
       await fs.mkdir(homeDir, { recursive: true });
 
-      // Create subdirectories
-      await fs.mkdir(`${homeDir}/videos`, { recursive: true });
-
       // Set ownership to ftpuser:ftpuser (UID:GID 2001:2001)
       await execAsync(`sudo chown -R ftpuser:ftpuser "${homeDir}"`);
       await execAsync(`sudo chmod 755 "${homeDir}"`);

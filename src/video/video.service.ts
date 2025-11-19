@@ -1,13 +1,13 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateVideoDto, QueryVideosDto } from './dto';
+import {  QueryVideosDto } from './dto';
 import { Prisma } from 'generated/prisma';
 
 @Injectable()
 export class VideoService {
   private readonly logger = new Logger(VideoService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Videos are automatically indexed by FtpWatcherService when cameras upload via FTP
@@ -118,7 +118,7 @@ export class VideoService {
     this.logger.log(`Video deleted: ${video.filename}`);
     return { message: 'Video deleted successfully' };
   }
-s
+
 
 
 }

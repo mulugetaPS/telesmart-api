@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class StorageTrackingService {
   private readonly logger = new Logger(StorageTrackingService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Calculate and update user's storage usage from Video table
@@ -135,27 +135,5 @@ export class StorageTrackingService {
     };
   }
 
-  /**
-   * Recalculate storage for all users (maintenance task)
-   * Run this periodically to ensure accuracy
-   */
-  async recalculateAllUsersStorage(): Promise<void> {
-    const users = await this.prisma.ftpUser.findMany({
-      select: { userId: true },
-    });
 
-    this.logger.log(`Recalculating storage for ${users.length} users...`);
-
-    for (const user of users) {
-      try {
-        await this.updateUserStorageUsage(user.userId);
-      } catch (error) {
-        this.logger.error(
-          `Failed to recalculate storage for user ${user.userId}: ${error}`,
-        );
-      }
-    }
-
-    this.logger.log('Storage recalculation complete');
-  }
 }

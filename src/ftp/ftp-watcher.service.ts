@@ -24,6 +24,59 @@ export class FtpWatcherService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     this.startWatching();
+    // Index existing files on startup
+    await this.indexExistingFiles();
+  }
+
+  /**
+   * Index existing video files on startup
+   */
+  private async indexExistingFiles() {
+    this.logger.log('Indexing existing video files...');
+    
+    try {
+      const ftpUsers = await this.prisma.ftpUser.findMany({
+        where: { isActive: true },
+        select: {
+          userId: true,
+          username: true,
+          homeDir: true,
+          user: {
+            select: {
+              devices: { select: { id: true, deviceId: true } },
+            },
+          },
+        },
+      });
+
+      for (const ftpUser of ftpUsers) {
+        try {
+          const files = await fs.readdir(ftpUser.homeDir);
+          
+          for (const filename of files) {
+            if (this.isVideoFile(filename)) {
+              const filepath = path.join(ftpUser.homeDir, filename);
+              this.logger.log(`Found existing video: ${filepath}`);
+              await this.handleNewVideo(filepath);
+            }
+          }
+        } catch (error) {
+          // Directory might not exist yet
+        }
+      }
+      
+      this.logger.log('Existing files indexed');
+    } catch (error) {
+      this.logger.error(`Failed to index existing files: ${error}`);
+    }
+  }
+
+  /**
+   * Check if file is a video based on extension
+   */
+  private isVideoFile(filename: string): boolean {
+    const ext = path.extname(filename).toLowerCase();
+    return ['.mp4', '.avi', '.mkv', '.mov', '.flv', '.wmv'].includes(ext);
   }
 
   async onModuleDestroy() {

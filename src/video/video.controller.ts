@@ -31,23 +31,13 @@ export class VideoController {
     private readonly config: ConfigService,
   ) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Record video upload' })
-  async create(@Body() createVideoDto: CreateVideoDto) {
-    return this.videoService.createVideo(createVideoDto);
-  }
-
   @Get()
   @ApiOperation({ summary: 'Get videos with filters' })
   async findAll(@Query() query: QueryVideosDto) {
     return this.videoService.getVideos(query);
   }
 
-  @Get('storage')
-  @ApiOperation({ summary: 'Get storage quota for the authenticated user' })
-  async getStorageQuota(@CurrentUserId() userId: number) {
-    return this.videoService.getStorageQuota(userId);
-  }
+
 
   @Get(':id')
   @ApiOperation({ summary: 'Get video by ID' })

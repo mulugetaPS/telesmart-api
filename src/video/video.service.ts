@@ -10,40 +10,9 @@ export class VideoService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Record video upload in database
+   * Videos are automatically indexed by FtpWatcherService when cameras upload via FTP
+   * No manual creation needed
    */
-  async createVideo(createVideoDto: CreateVideoDto) {
-    const { deviceId, filename, filepath, filesize, duration, recordedAt } =
-      createVideoDto;
-
-    // Get device to verify it exists and get userId
-    const device = await this.prisma.device.findUnique({
-      where: { id: deviceId },
-    });
-
-    if (!device) {
-      throw new NotFoundException('Device not found');
-    }
-
-    // Create video record
-    const video = await this.prisma.video.create({
-      data: {
-        deviceId,
-        userId: device.userId,
-        filename,
-        filepath,
-        filesize: BigInt(filesize),
-        duration,
-        recordedAt: recordedAt || new Date(),
-      },
-    });
-
-    // Update storage quota
-    await this.updateStorageQuota(device.userId, BigInt(filesize));
-
-    this.logger.log(`Video recorded: ${filename} for device ${deviceId}`);
-    return video;
-  }
 
   /**
    * Get videos with filters
@@ -120,7 +89,7 @@ export class VideoService {
   }
 
   /**
-   * Delete video
+   * Delete video (also deletes physical file)
    */
   async deleteVideo(id: number) {
     const video = await this.prisma.video.findUnique({
@@ -131,9 +100,17 @@ export class VideoService {
       throw new NotFoundException('Video not found');
     }
 
-    // Update storage quota
-    await this.updateStorageQuota(video.userId, -video.filesize);
+    // Delete physical file from FTP directory
+    const fullPath = `${process.env.FTP_ROOT || '/var/ftp'}/${video.filepath}`;
+    try {
+      const fs = await import('fs/promises');
+      await fs.unlink(fullPath);
+      this.logger.log(`Deleted physical file: ${fullPath}`);
+    } catch (error) {
+      this.logger.warn(`Failed to delete physical file: ${fullPath}`);
+    }
 
+    // Delete from database (FtpWatcherService will handle storage update)
     await this.prisma.video.delete({
       where: { id },
     });
@@ -141,45 +118,7 @@ export class VideoService {
     this.logger.log(`Video deleted: ${video.filename}`);
     return { message: 'Video deleted successfully' };
   }
+s
 
-  /**
-   * Get storage quota for user
-   */
-  async getStorageQuota(userId: number) {
-    let quota = await this.prisma.storageQuota.findUnique({
-      where: { userId },
-    });
 
-    if (!quota) {
-      quota = await this.prisma.storageQuota.create({
-        data: { userId },
-      });
-    }
-
-    return {
-      ...quota,
-      usedGB: Number(quota.usedBytes) / (1024 * 1024 * 1024),
-      limitGB: Number(quota.limitBytes) / (1024 * 1024 * 1024),
-      percentageUsed:
-        (Number(quota.usedBytes) / Number(quota.limitBytes)) * 100,
-    };
-  }
-
-  /**
-   * Update storage quota
-   */
-  private async updateStorageQuota(userId: number, bytesChange: bigint) {
-    await this.prisma.storageQuota.upsert({
-      where: { userId },
-      update: {
-        usedBytes: {
-          increment: bytesChange,
-        },
-      },
-      create: {
-        userId,
-        usedBytes: bytesChange > 0 ? bytesChange : BigInt(0),
-      },
-    });
-  }
 }

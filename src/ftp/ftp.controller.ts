@@ -96,11 +96,6 @@ export class FtpController {
     };
   }
 
-  @Get('users')
-  @ApiOperation({ summary: 'List all FTP users' })
-  async listUsers() {
-    return this.ftpService.listFtpUsers();
-  }
 
   @Get('user/:userId/quota-info')
   @ApiOperation({ summary: 'Get quota information for a user' })
@@ -108,11 +103,6 @@ export class FtpController {
     return this.ftpService.getQuotaInfo(+userId);
   }
 
-  @Get('quota-info/all')
-  @ApiOperation({ summary: 'Get quota information for all users' })
-  async getAllQuotaInfo() {
-    return this.ftpService.getAllQuotaInfo();
-  }
 
   @Get('user/:userId/disk-usage')
   @ApiOperation({ summary: 'Calculate actual disk usage for a user' })

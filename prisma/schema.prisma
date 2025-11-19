@@ -71,29 +71,20 @@ model Video {
   @@index([recordedAt])
 }
 
-model StorageQuota {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
-  usedBytes  BigInt   @default(0)
-  limitBytes BigInt   @default(10737418240) // 10GB default
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([userId])
-}
-
 model FtpUser {
   id                Int       @id @default(autoincrement())
   userId            Int       @unique
   username          String    @unique
-  password          String // MD5 hash for Pure-FTPd
+  password          String // MD5 crypt hash for Pure-FTPd
   uid               Int       @default(2001)
   gid               Int       @default(2001)
   homeDir           String
   uploadBandwidth   Int       @default(0) // KB/s, 0 = unlimited
   downloadBandwidth Int       @default(0) // KB/s, 0 = unlimited
-  quotaSize         BigInt    @default(10737418240) // 10GB in bytes
+  quotaSize         BigInt    @default(10737418240) // 10GB in bytes (storage limit)
+  usedBytes         BigInt    @default(0) // Current storage usage in bytes
   quotaFiles        Int       @default(0) // 0 = unlimited
+  storagePlan       String    @default("free") // 'free', 'basic', 'premium', 'enterprise'
   isActive          Boolean   @default(true)
   lastLoginAt       DateTime?
   createdAt         DateTime  @default(now())
@@ -104,4 +95,5 @@ model FtpUser {
   @@index([username])
   @@index([userId])
   @@index([isActive])
+  @@index([storagePlan])
 }

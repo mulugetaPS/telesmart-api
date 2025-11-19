@@ -33,30 +33,41 @@ export class FtpWatcherService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWatching() {
+    const watchPattern = `${this.ftpRoot}/*/*.{mp4,avi,mkv,mov,flv,wmv}`;
     this.logger.log(`Starting FTP directory watcher: ${this.ftpRoot}`);
+    this.logger.log(`Watch pattern: ${watchPattern}`);
 
     // Watch all video files in user root directories
     // Monitors: /var/ftp/cam_user_1/*.mp4
-    this.watcher = chokidar.watch(
-      `${this.ftpRoot}/*/*.{mp4,avi,mkv,mov,flv,wmv}`,
-      {
-        persistent: true,
-        ignoreInitial: true, // Don't trigger for existing files
-        awaitWriteFinish: {
-          stabilityThreshold: 2000, // Wait 2s after file stops changing
-          pollInterval: 100,
-        },
+    this.watcher = chokidar.watch(watchPattern, {
+      persistent: true,
+      ignoreInitial: false, // Trigger for existing files on startup
+      awaitWriteFinish: {
+        stabilityThreshold: 2000, // Wait 2s after file stops changing
+        pollInterval: 100,
       },
-    );
+    });
+
+    // Watcher ready
+    this.watcher.on('ready', () => {
+      this.logger.log('FTP directory watcher is ready and monitoring');
+    });
 
     // File added
     this.watcher.on('add', async (filepath) => {
+      this.logger.log(`File detected: ${filepath}`);
       await this.handleNewVideo(filepath);
     });
 
     // File deleted
     this.watcher.on('unlink', async (filepath) => {
+      this.logger.log(`File deleted: ${filepath}`);
       await this.handleDeletedVideo(filepath);
+    });
+
+    // Error handling
+    this.watcher.on('error', (error) => {
+      this.logger.error(`Watcher error: ${error}`);
     });
 
     this.logger.log('FTP directory watcher started - monitoring user root directories');

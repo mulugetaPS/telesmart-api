@@ -54,8 +54,14 @@ export class VideoService {
       this.prisma.video.count({ where }),
     ]);
 
+    // Convert BigInt to string for JSON serialization
+    const serializedVideos = videos.map((video) => ({
+      ...video,
+      filesize: video.filesize.toString(),
+    }));
+
     return {
-      data: videos,
+      data: serializedVideos,
       meta: {
         total,
         page,
@@ -85,7 +91,11 @@ export class VideoService {
       throw new NotFoundException('Video not found');
     }
 
-    return video;
+    // Convert BigInt to string for JSON serialization
+    return {
+      ...video,
+      filesize: video.filesize.toString(),
+    };
   }
 
   /**

@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { VideoService } from './video.service';
-import { CreateVideoDto, QueryVideosDto } from './dto';
+import {  QueryVideosDto } from './dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { createReadStream, existsSync, statSync } from 'fs';
 import { join } from 'path';

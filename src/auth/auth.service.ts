@@ -190,21 +190,11 @@ export class AuthService {
     id: number;
     phone: string;
     isActive: boolean;
-    openid: string | null;
-    accessToken: string | null;
-    tokenExpireTime: bigint | null;
-    lastLoginAt: Date | null;
-    createdAt: Date;
-    updatedAt: Date;
   }): UserResponseDto {
     return {
       id: user.id,
       phone: user.phone,
       isActive: user.isActive,
-      openid: user.openid,
-      lastLoginAt: user.lastLoginAt,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
     };
   }
 }

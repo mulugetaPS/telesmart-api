@@ -54,32 +54,6 @@ export class UserResponseDto {
     example: true,
   })
   isActive: boolean;
-
-  @ApiProperty({
-    description: 'Imou OpenID',
-    example: null,
-    nullable: true,
-  })
-  openid: string | null;
-
-  @ApiProperty({
-    description: 'Last login timestamp',
-    example: '2024-11-13T10:30:00.000Z',
-    nullable: true,
-  })
-  lastLoginAt: Date | null;
-
-  @ApiProperty({
-    description: 'Account creation timestamp',
-    example: '2024-11-01T08:00:00.000Z',
-  })
-  createdAt: Date;
-
-  @ApiProperty({
-    description: 'Last update timestamp',
-    example: '2024-11-13T10:30:00.000Z',
-  })
-  updatedAt: Date;
 }
 
 export class VerifyOtpResponseDto {

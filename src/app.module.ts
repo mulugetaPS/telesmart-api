@@ -4,25 +4,28 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import appConfig from './config/app.config';
 import ftpConfig from './config/ftp.config';
+import imouConfig from './config/imou.config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { VideoModule } from './video/video.module';
 import { FtpModule } from './ftp/ftp.module';
-import { DeviceModule } from './device/device.module';
+import { ImouModule } from './imou/imou.module';
+import { CameraModule } from './camera/camera.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [appConfig, ftpConfig],
+      load: [appConfig, ftpConfig, imouConfig],
       isGlobal: true,
     }),
     PrismaModule,
     AuthModule,
-    DeviceModule,
     VideoModule,
     FtpModule,
+    ImouModule,
+    CameraModule,
   ],
   controllers: [AppController],
   providers: [

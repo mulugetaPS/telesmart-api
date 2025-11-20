@@ -11,14 +11,6 @@ import { Type } from 'class-transformer';
 
 export class GetSubAccountDevicesDto {
   @ApiProperty({
-    description: 'Sub-account openid',
-    example: '5dd2fe5bc11240a9b5d4fd4474c857c5',
-  })
-  @IsString()
-  @IsNotEmpty()
-  openid: string;
-
-  @ApiProperty({
     description: 'Page number (starts at 1)',
     example: 1,
     required: false,

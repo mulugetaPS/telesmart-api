@@ -6,13 +6,17 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ImouDeviceService } from '../services/imou-device.service';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { CurrentUserOpenId } from '../../auth/decorators/current-user.decorator';
 import {
   GetSubAccountDevicesDto,
   GetLiveStreamDto,
@@ -25,21 +29,26 @@ import {
 
 @ApiTags('IMOU - Device Management')
 @Controller('imou/device')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class ImouDeviceController {
-  constructor(private readonly deviceService: ImouDeviceService) {}
+  constructor(private readonly deviceService: ImouDeviceService) { }
 
   @Get('sub-account/list')
   @ApiOperation({
     summary: 'Get sub-account device list',
-    description: 'Get list of devices with permissions for a sub-account',
+    description: 'Get list of devices with permissions for the authenticated user',
   })
   @ApiResponse({
     status: 200,
     description: 'Device list with permissions retrieved successfully',
   })
-  async getSubAccountDevices(@Query() dto: GetSubAccountDevicesDto) {
+  async getSubAccountDevices(
+    @CurrentUserOpenId() openid: string,
+    @Query() dto: GetSubAccountDevicesDto,
+  ) {
     const result = await this.deviceService.getSubAccountDeviceList(
-      dto.openid,
+      openid,
       dto.pageNo || 1,
       dto.pageSize || 10,
     );

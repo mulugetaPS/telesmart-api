@@ -61,7 +61,7 @@ export class ImouApiHelper {
         );
       }
 
-      return result.data as T;
+      return result.data;
     } catch (error) {
       if (error instanceof HttpException) throw error;
 

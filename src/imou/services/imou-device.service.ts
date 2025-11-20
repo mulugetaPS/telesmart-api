@@ -22,7 +22,7 @@ export class ImouDeviceService {
   constructor(
     private readonly adminService: ImouAdminService,
     private readonly apiHelper: ImouApiHelper,
-  ) {}
+  ) { }
 
   /**
    * Get list of devices with permissions for a sub-account
@@ -36,6 +36,7 @@ export class ImouDeviceService {
     pageNo: number = 1,
     pageSize: number = 10,
   ): Promise<SubAccountDeviceListResult> {
+    console.log({ openid })
     const adminToken = await this.adminService.getAdminAccessToken();
     return this.apiHelper.makeApiCall<SubAccountDeviceListResult>(
       '/openapi/listSubAccountDevice',

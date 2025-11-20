@@ -20,11 +20,11 @@ CREATE TABLE "Device" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "deviceId" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
     "name" TEXT,
     "deviceModel" TEXT,
     "status" TEXT,
     "channels" INTEGER NOT NULL DEFAULT 1,
-    "bindCode" TEXT,
     "permissions" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -50,18 +50,6 @@ CREATE TABLE "Video" (
 );
 
 -- CreateTable
-CREATE TABLE "StorageQuota" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "usedBytes" BIGINT NOT NULL DEFAULT 0,
-    "limitBytes" BIGINT NOT NULL DEFAULT 10737418240,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "StorageQuota_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "FtpUser" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
@@ -73,7 +61,9 @@ CREATE TABLE "FtpUser" (
     "uploadBandwidth" INTEGER NOT NULL DEFAULT 0,
     "downloadBandwidth" INTEGER NOT NULL DEFAULT 0,
     "quotaSize" BIGINT NOT NULL DEFAULT 10737418240,
+    "usedBytes" BIGINT NOT NULL DEFAULT 0,
     "quotaFiles" INTEGER NOT NULL DEFAULT 0,
+    "storagePlan" TEXT NOT NULL DEFAULT 'free',
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "lastLoginAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -116,12 +106,6 @@ CREATE INDEX "Video_userId_idx" ON "Video"("userId");
 CREATE INDEX "Video_recordedAt_idx" ON "Video"("recordedAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "StorageQuota_userId_key" ON "StorageQuota"("userId");
-
--- CreateIndex
-CREATE INDEX "StorageQuota_userId_idx" ON "StorageQuota"("userId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "FtpUser_userId_key" ON "FtpUser"("userId");
 
 -- CreateIndex
@@ -135,6 +119,9 @@ CREATE INDEX "FtpUser_userId_idx" ON "FtpUser"("userId");
 
 -- CreateIndex
 CREATE INDEX "FtpUser_isActive_idx" ON "FtpUser"("isActive");
+
+-- CreateIndex
+CREATE INDEX "FtpUser_storagePlan_idx" ON "FtpUser"("storagePlan");
 
 -- AddForeignKey
 ALTER TABLE "Device" ADD CONSTRAINT "Device_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

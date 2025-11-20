@@ -33,12 +33,12 @@ model User {
 model Device {
   id          Int      @id @default(autoincrement())
   userId      Int
-  deviceId    String // Imou device serial number
+  deviceId    String
+  code        String
   name        String?
   deviceModel String?
   status      String? // 'online' | 'offline'
   channels    Int      @default(1)
-  bindCode    String? // Device verification code (encrypted)
   permissions String[] // Array of permissions: ['Ptz', 'Talk', 'Real', 'Config']
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

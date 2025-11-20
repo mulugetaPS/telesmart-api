@@ -3,6 +3,7 @@ import {
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,6 +14,7 @@ import {
   UserResponseDto,
   RefreshTokenResponseDto,
 } from './dto/auth.dto';
+import { ImouSubAccountService } from '../imou/services/imou-sub-account.service';
 
 type JwtPayload = {
   sub: number;
@@ -21,10 +23,13 @@ type JwtPayload = {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private externalOtpService: ExternalOtpService,
+    private imouSubAccountService: ImouSubAccountService,
   ) {}
 
   /**
@@ -69,6 +74,35 @@ export class AuthService {
             lastLoginAt: new Date(),
           },
         });
+
+        // Create IMOU sub-account for new user
+        try {
+          const imouSubAccount =
+            await this.imouSubAccountService.createSubAccount(
+              verifyOtpDto.phone,
+            );
+
+          // Update user with IMOU credentials
+          user = await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+              openid: imouSubAccount.openid,
+            },
+          });
+
+          this.logger.log(
+            `IMOU sub-account created for user ${user.id}: ${imouSubAccount.openid}`,
+          );
+        } catch (imouError) {
+          // Log error but don't fail registration
+          this.logger.error(
+            `Failed to create IMOU sub-account for user ${user.id}:`,
+            imouError,
+          );
+          this.logger.warn(
+            'User was created without IMOU integration. Sub-account can be created later.',
+          );
+        }
       } else {
         user = await this.prisma.user.update({
           where: { id: user.id },

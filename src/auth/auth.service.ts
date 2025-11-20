@@ -19,6 +19,7 @@ import { ImouSubAccountService } from '../imou/services/imou-sub-account.service
 type JwtPayload = {
   sub: number;
   phone: string;
+  openid?: string;
 };
 
 @Injectable()
@@ -30,7 +31,7 @@ export class AuthService {
     private jwtService: JwtService,
     private externalOtpService: ExternalOtpService,
     private imouSubAccountService: ImouSubAccountService,
-  ) {}
+  ) { }
 
   /**
    * Send OTP to phone number using external API
@@ -113,7 +114,7 @@ export class AuthService {
       }
 
       // Generate JWT token
-      const accessToken = this.generateToken(user.id, user.phone);
+      const accessToken = this.generateToken(user.id, user.phone, user.openid || undefined);
 
       return {
         accessToken,
@@ -141,7 +142,7 @@ export class AuthService {
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    const accessToken = this.generateToken(user.id, user.phone);
+    const accessToken = this.generateToken(user.id, user.phone, user.openid || undefined);
 
     return { accessToken };
   }
@@ -178,10 +179,11 @@ export class AuthService {
 
   // ==================== Private Helper Methods ====================
 
-  private generateToken(userId: number, phone: string): string {
+  private generateToken(userId: number, phone: string, openid?: string): string {
     const payload: JwtPayload = {
       sub: userId,
       phone,
+      ...(openid && { openid }),
     };
     return this.jwtService.sign(payload);
   }
@@ -190,7 +192,10 @@ export class AuthService {
     id: number;
     phone: string;
     isActive: boolean;
+    openid?: string | null;
   }): UserResponseDto {
+    // Note: openid is intentionally excluded from response for security
+    // but is available internally via JWT payload and decorators
     return {
       id: user.id,
       phone: user.phone,

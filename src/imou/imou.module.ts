@@ -5,7 +5,7 @@ import { ImouApiHelper } from './helpers/imou-api.helper';
 import { ImouAdminService } from './services/imou-admin.service';
 import { ImouSubAccountService } from './services/imou-sub-account.service';
 import { ImouDeviceService } from './services/imou-device.service';
-import { ImouAccountController } from './controllers/imou-account.controller';
+
 import { ImouDeviceController } from './controllers/imou-device.controller';
 
 @Module({
@@ -16,7 +16,7 @@ import { ImouDeviceController } from './controllers/imou-device.controller';
       maxRedirects: 5,
     }),
   ],
-  controllers: [ImouAccountController, ImouDeviceController],
+  controllers: [ImouDeviceController],
   providers: [
     ImouApiHelper,
     ImouAdminService,
@@ -25,4 +25,4 @@ import { ImouDeviceController } from './controllers/imou-device.controller';
   ],
   exports: [ImouAdminService, ImouSubAccountService, ImouDeviceService],
 })
-export class ImouModule {}
+export class ImouModule { }

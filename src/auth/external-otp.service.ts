@@ -46,7 +46,6 @@ export class ExternalOtpService {
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${this.otpApiKey}`,
-              // Add any other required headers
             },
           },
         ),
@@ -59,7 +58,8 @@ export class ExternalOtpService {
       this.logger.log(`OTP sent successfully to ${phone}`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Failed to send OTP to ${phone}:`, error.message);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to send OTP to ${phone}:`, message);
       throw new Error(error.response?.data?.message || 'Failed to send OTP');
     }
   }
@@ -81,14 +81,12 @@ export class ExternalOtpService {
           {
             phone,
             code,
-            sessionId, // Include if your API uses session-based verification
-            // Add any additional parameters your API requires
+            sessionId,
           },
           {
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${this.otpApiKey}`,
-              // Add any other required headers
             },
           },
         ),
@@ -104,9 +102,8 @@ export class ExternalOtpService {
     } catch (error) {
       this.logger.error(`Failed to verify OTP for ${phone}:`, error.message);
 
-      // Handle specific error cases
       if (error.response?.status === 401 || error.response?.status === 400) {
-        return false; // Invalid OTP
+        return false;
       }
 
       throw new Error(error.response?.data?.message || 'Failed to verify OTP');

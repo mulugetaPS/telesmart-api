@@ -7,6 +7,7 @@ import { AuthService } from '../auth.service';
 type JwtPayload = {
   sub: number;
   phone: string;
+  openid?: string;
 };
 
 @Injectable()
@@ -33,6 +34,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException();
     }
-    return user;
+    return {
+      ...user,
+      ...(payload.openid && { openid: payload.openid }),
+    };
   }
 }

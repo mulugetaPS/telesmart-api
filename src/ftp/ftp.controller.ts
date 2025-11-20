@@ -96,13 +96,11 @@ export class FtpController {
     };
   }
 
-
   @Get('user/:userId/quota-info')
   @ApiOperation({ summary: 'Get quota information for a user' })
   async getQuotaInfo(@Param('userId') userId: string) {
     return this.ftpService.getQuotaInfo(+userId);
   }
-
 
   @Get('user/:userId/disk-usage')
   @ApiOperation({ summary: 'Calculate actual disk usage for a user' })

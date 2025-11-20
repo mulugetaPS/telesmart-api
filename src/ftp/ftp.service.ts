@@ -269,8 +269,6 @@ export class FtpService {
     this.logger.log(`FTP user ${userId} ${isActive ? 'enabled' : 'disabled'}`);
   }
 
-
-
   /**
    * Calculate actual disk usage for a user's FTP directory
    * Returns size in bytes
@@ -334,6 +332,4 @@ export class FtpService {
       isOverQuota: usedBytes > quotaBytes,
     };
   }
-
-  
 }

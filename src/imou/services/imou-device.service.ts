@@ -128,11 +128,6 @@ export class ImouDeviceService {
   }
 
   /**
-   * Unbind (remove) a device from the current account
-   * After unbinding:
-   * - Alarm messages are deleted immediately
-   * - Cloud video is not deleted immediately but will expire
-   * - Active cloud storage package returns to developer account for reuse
    * Rate limit: 2,000 calls/day
    * @param openid User's openid
    * @param deviceId Device serial number
@@ -152,7 +147,6 @@ export class ImouDeviceService {
   }
 
   /**
-   * Bind a device to an account using its verification code or password
    * Rate limit: 2,000 calls/day
    * @param openid User's openid
    * @param deviceId Device serial number
@@ -167,6 +161,10 @@ export class ImouDeviceService {
     encryptCode?: string,
   ): Promise<BindDeviceResult> {
     this.logger.log(`Binding device: ${deviceId}`);
+
+    await this.unbindDevice(openid, deviceId);
+    this.logger.log(`Device ${deviceId} unbound successfully before rebinding`);
+
     const userToken = await this.tokenManager.getTokenByOpenId(openid);
     const params: Record<string, unknown> = { deviceId, code };
     if (encryptCode) {

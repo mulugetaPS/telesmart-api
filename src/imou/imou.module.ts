@@ -1,16 +1,19 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+import { PrismaModule } from '../prisma/prisma.module';
 import { ImouApiHelper } from './helpers/imou-api.helper';
 import { ImouAdminService } from './services/imou-admin.service';
 import { ImouSubAccountService } from './services/imou-sub-account.service';
 import { ImouDeviceService } from './services/imou-device.service';
+import { SubAccountTokenManagerService } from './services/sub-account-token-manager.service';
 
 import { ImouDeviceController } from './controllers/imou-device.controller';
 
 @Module({
   imports: [
     ConfigModule,
+    PrismaModule,
     HttpModule.register({
       timeout: 10000,
       maxRedirects: 5,
@@ -22,6 +25,7 @@ import { ImouDeviceController } from './controllers/imou-device.controller';
     ImouAdminService,
     ImouSubAccountService,
     ImouDeviceService,
+    SubAccountTokenManagerService,
   ],
   exports: [ImouAdminService, ImouSubAccountService, ImouDeviceService],
 })

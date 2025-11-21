@@ -67,9 +67,12 @@ export class ImouDeviceController {
     status: 200,
     description: 'Live stream URLs retrieved successfully',
   })
-  async getLiveStream(@Query() dto: GetLiveStreamDto) {
+  async getLiveStream(
+    @CurrentUserOpenId() openid: string,
+    @Query() dto: GetLiveStreamDto,
+  ) {
     const result = await this.deviceService.getLiveStreamUrl(
-      dto.token,
+      openid,
       dto.deviceId,
       dto.channelId || 0,
       dto.streamId || 0,
@@ -90,9 +93,12 @@ export class ImouDeviceController {
     status: 200,
     description: 'PTZ control executed successfully',
   })
-  async controlPtz(@Body() dto: PtzControlDto) {
+  async controlPtz(
+    @CurrentUserOpenId() openid: string,
+    @Body() dto: PtzControlDto,
+  ) {
     const result = await this.deviceService.controlPtz(
-      dto.token,
+      openid,
       dto.deviceId,
       dto.operation,
       dto.channelId || 0,
@@ -114,9 +120,12 @@ export class ImouDeviceController {
     status: 200,
     description: 'Device online status retrieved successfully',
   })
-  async getDeviceOnline(@Query() dto: GetDeviceOnlineDto) {
+  async getDeviceOnline(
+    @CurrentUserOpenId() openid: string,
+    @Query() dto: GetDeviceOnlineDto,
+  ) {
     const result = await this.deviceService.getDeviceOnlineStatus(
-      dto.token,
+      openid,
       dto.deviceId,
     );
     return {
@@ -135,9 +144,12 @@ export class ImouDeviceController {
     status: 200,
     description: 'Device binding status retrieved successfully',
   })
-  async checkDeviceBinding(@Query() dto: CheckDeviceBindingDto) {
+  async checkDeviceBinding(
+    @CurrentUserOpenId() openid: string,
+    @Query() dto: CheckDeviceBindingDto,
+  ) {
     const result = await this.deviceService.checkDeviceBindingStatus(
-      dto.token,
+      openid,
       dto.deviceId,
     );
     return {
@@ -157,9 +169,12 @@ export class ImouDeviceController {
     status: 200,
     description: 'Device bound successfully',
   })
-  async bindDevice(@Body() dto: BindDeviceDto) {
+  async bindDevice(
+    @CurrentUserOpenId() openid: string,
+    @Body() dto: BindDeviceDto,
+  ) {
     const result = await this.deviceService.bindDevice(
-      dto.token,
+      openid,
       dto.deviceId,
       dto.code,
       dto.encryptCode,
@@ -182,9 +197,12 @@ export class ImouDeviceController {
     status: 200,
     description: 'Device unbound successfully',
   })
-  async unbindDevice(@Body() dto: UnbindDeviceDto) {
+  async unbindDevice(
+    @CurrentUserOpenId() openid: string,
+    @Body() dto: UnbindDeviceDto,
+  ) {
     const result = await this.deviceService.unbindDevice(
-      dto.token,
+      openid,
       dto.deviceId,
     );
     return {

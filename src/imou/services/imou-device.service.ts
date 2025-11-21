@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ImouAdminService } from './imou-admin.service';
 import { ImouApiHelper } from '../helpers/imou-api.helper';
+import { SubAccountTokenManagerService } from './sub-account-token-manager.service';
 import {
   SubAccountDeviceListResult,
   LiveStreamResult,
@@ -22,6 +23,7 @@ export class ImouDeviceService {
   constructor(
     private readonly adminService: ImouAdminService,
     private readonly apiHelper: ImouApiHelper,
+    private readonly tokenManager: SubAccountTokenManagerService,
   ) { }
 
   /**
@@ -47,17 +49,18 @@ export class ImouDeviceService {
 
   /**
    * Get live stream URL for a device
-   * @param userToken User's access token
+   * @param openid User's openid
    * @param deviceId Device serial number
    * @param channelId Channel ID (default: 0)
    * @param streamId Stream quality (0 = HD, 1 = SD)
    */
   async getLiveStreamUrl(
-    userToken: string,
+    openid: string,
     deviceId: string,
     channelId: number = 0,
     streamId: number = 0,
   ): Promise<LiveStreamResult> {
+    const userToken = await this.tokenManager.getTokenByOpenId(openid);
     return this.apiHelper.makeApiCall<LiveStreamResult>(
       '/openapi/live/address/get',
       { deviceId, channelId, streamId },
@@ -67,19 +70,20 @@ export class ImouDeviceService {
 
   /**
    * Control PTZ (Pan-Tilt-Zoom)
-   * @param userToken User's access token
+   * @param openid User's openid
    * @param deviceId Device serial number
    * @param operation PTZ operation
    * @param channelId Channel ID
    * @param duration Duration in milliseconds
    */
   async controlPtz(
-    userToken: string,
+    openid: string,
     deviceId: string,
     operation: string,
     channelId: number = 0,
     duration: number = 1000,
   ): Promise<PtzControlResult> {
+    const userToken = await this.tokenManager.getTokenByOpenId(openid);
     return this.apiHelper.makeApiCall<PtzControlResult>(
       '/openapi/device/ptz/start',
       { deviceId, channelId, operation, duration },
@@ -89,14 +93,15 @@ export class ImouDeviceService {
 
   /**
    * Get device online status
-   * @param userToken User's access token (admin or sub-account)
+   * @param openid User's openid
    * @param deviceId Device serial number
    * @returns Device and channel online status
    */
   async getDeviceOnlineStatus(
-    userToken: string,
+    openid: string,
     deviceId: string,
   ): Promise<DeviceOnlineResult> {
+    const userToken = await this.tokenManager.getTokenByOpenId(openid);
     return this.apiHelper.makeApiCall<DeviceOnlineResult>(
       '/openapi/deviceOnline',
       { deviceId },
@@ -106,14 +111,15 @@ export class ImouDeviceService {
 
   /**
    * Check device binding status
-   * @param userToken User's access token (admin or sub-account)
+   * @param openid User's openid
    * @param deviceId Device serial number
    * @returns Device binding status (isBind, isMine)
    */
   async checkDeviceBindingStatus(
-    userToken: string,
+    openid: string,
     deviceId: string,
   ): Promise<DeviceBindingStatusResult> {
+    const userToken = await this.tokenManager.getTokenByOpenId(openid);
     return this.apiHelper.makeApiCall<DeviceBindingStatusResult>(
       '/openapi/checkDeviceBindOrNot',
       { deviceId },
@@ -128,15 +134,16 @@ export class ImouDeviceService {
    * - Cloud video is not deleted immediately but will expire
    * - Active cloud storage package returns to developer account for reuse
    * Rate limit: 2,000 calls/day
-   * @param userToken User's access token (admin or sub-account)
+   * @param openid User's openid
    * @param deviceId Device serial number
    * @returns Unbind operation result
    */
   async unbindDevice(
-    userToken: string,
+    openid: string,
     deviceId: string,
   ): Promise<UnbindDeviceResult> {
     this.logger.log(`Unbinding device: ${deviceId}`);
+    const userToken = await this.tokenManager.getTokenByOpenId(openid);
     return this.apiHelper.makeApiCall<UnbindDeviceResult>(
       '/openapi/unBindDevice',
       { deviceId },
@@ -147,19 +154,20 @@ export class ImouDeviceService {
   /**
    * Bind a device to an account using its verification code or password
    * Rate limit: 2,000 calls/day
-   * @param userToken Administrator access token
+   * @param openid User's openid
    * @param deviceId Device serial number
    * @param code Device verification code (auth password, 6-digit security code, or empty string)
    * @param encryptCode Optional encrypted version of code for better security
    * @returns Bind operation result
    */
   async bindDevice(
-    userToken: string,
+    openid: string,
     deviceId: string,
     code: string,
     encryptCode?: string,
   ): Promise<BindDeviceResult> {
     this.logger.log(`Binding device: ${deviceId}`);
+    const userToken = await this.tokenManager.getTokenByOpenId(openid);
     const params: Record<string, unknown> = { deviceId, code };
     if (encryptCode) {
       params.encryptCode = encryptCode;

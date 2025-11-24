@@ -189,7 +189,7 @@ export class ImouDeviceService {
     // Check if error code is SUB1000 (no permission)
     if (result.code === 'SUB1000') {
       this.logger.warn(
-        `Sub-account ${openid} has no permission for device ${deviceId}. ` +
+        `This account has no permission for device ${deviceId}. ` +
         `Granting permissions and retrying...`,
       );
 

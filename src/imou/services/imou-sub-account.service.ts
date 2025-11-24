@@ -112,33 +112,11 @@ export class ImouSubAccountService {
    * - Talk: two-way audio / intercom
    * - Config: configuration access (device settings)
    * 
-   * Resource formats:
-   * - dev:<deviceId> - permission for all channels of that device
-   * - cam:<deviceId>:<channelId> - permission for a specific channel
-   * 
    * @param params Object containing openid and policy
    * @param params.openid Sub-account's unique ID
    * @param params.policy Policy object with permission statements
    * @returns void (no additional data returned on success)
    * 
-   * @example
-   * ```typescript
-   * await addPolicy({
-   *   openid: '5dd2fe5bc11240a9b5d4fd4474c857c5',
-   *   policy: {
-   *     statement: [
-   *       {
-   *         permission: 'Ptz,Talk,Config',
-   *         resource: ['dev:469631729', 'cam:544229080:1']
-   *       },
-   *       {
-   *         permission: 'Real',
-   *         resource: ['dev:470686804']
-   *       }
-   *     ]
-   *   }
-   * });
-   * ```
    * 
    * @throws Error if total number of resources exceeds 10 (API limit)
    */

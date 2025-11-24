@@ -9,6 +9,7 @@ import { ImouDeviceService } from './services/imou-device.service';
 import { ImouLiveService } from './services/imou-live.service';
 import { SubAccountTokenManagerService } from './services/sub-account-token-manager.service';
 
+import { ImouAdminController } from './controllers/imou-admin.controller';
 import { ImouDeviceController } from './controllers/imou-device.controller';
 import { ImouLiveController } from './controllers/imou-live.controller';
 
@@ -21,7 +22,7 @@ import { ImouLiveController } from './controllers/imou-live.controller';
       maxRedirects: 5,
     }),
   ],
-  controllers: [ImouDeviceController, ImouLiveController],
+  controllers: [ImouAdminController, ImouDeviceController, ImouLiveController],
   providers: [
     ImouApiHelper,
     ImouAdminService,

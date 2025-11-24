@@ -47,15 +47,11 @@ export class ImouDeviceController {
     @CurrentUserOpenId() openid: string,
     @Query() dto: GetSubAccountDevicesDto,
   ) {
-    const result = await this.deviceService.getSubAccountDeviceList(
+    return await this.deviceService.getSubAccountDeviceList(
       openid,
       dto.pageNo || 1,
       dto.pageSize || 10,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Get('live-stream')
@@ -71,16 +67,12 @@ export class ImouDeviceController {
     @CurrentUserOpenId() openid: string,
     @Query() dto: GetLiveStreamDto,
   ) {
-    const result = await this.deviceService.getLiveStreamUrl(
+    return await this.deviceService.getLiveStreamUrl(
       openid,
       dto.deviceId,
       dto.channelId || 0,
       dto.streamId || 0,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Post('ptz/control')
@@ -97,17 +89,13 @@ export class ImouDeviceController {
     @CurrentUserOpenId() openid: string,
     @Body() dto: PtzControlDto,
   ) {
-    const result = await this.deviceService.controlPtz(
+    return await this.deviceService.controlPtz(
       openid,
       dto.deviceId,
       dto.operation,
       dto.channelId || 0,
       dto.duration || 1000,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Get('status/online')
@@ -124,14 +112,10 @@ export class ImouDeviceController {
     @CurrentUserOpenId() openid: string,
     @Query() dto: GetDeviceOnlineDto,
   ) {
-    const result = await this.deviceService.getDeviceOnlineStatus(
+    return await this.deviceService.getDeviceOnlineStatus(
       openid,
       dto.deviceId,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Get('status/binding')
@@ -148,14 +132,10 @@ export class ImouDeviceController {
     @CurrentUserOpenId() openid: string,
     @Query() dto: CheckDeviceBindingDto,
   ) {
-    const result = await this.deviceService.checkDeviceBindingStatus(
+    return await this.deviceService.checkDeviceBindingStatus(
       openid,
       dto.deviceId,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Post('bind')
@@ -173,17 +153,12 @@ export class ImouDeviceController {
     @CurrentUserOpenId() openid: string,
     @Body() dto: BindDeviceDto,
   ) {
-    const result = await this.deviceService.bindDevice(
+    return await this.deviceService.bindDevice(
       openid,
       dto.deviceId,
       dto.code,
       dto.encryptCode,
     );
-    return {
-      success: true,
-      message: 'Device bound successfully',
-      data: result,
-    };
   }
 
   @Post('unbind')
@@ -201,14 +176,9 @@ export class ImouDeviceController {
     @CurrentUserOpenId() openid: string,
     @Body() dto: UnbindDeviceDto,
   ) {
-    const result = await this.deviceService.unbindDevice(
+    return await this.deviceService.unbindDevice(
       openid,
       dto.deviceId,
     );
-    return {
-      success: true,
-      message: 'Device unbound successfully',
-      data: result,
-    };
   }
 }

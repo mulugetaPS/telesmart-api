@@ -6,9 +6,11 @@ import { ImouApiHelper } from './helpers/imou-api.helper';
 import { ImouAdminService } from './services/imou-admin.service';
 import { ImouSubAccountService } from './services/imou-sub-account.service';
 import { ImouDeviceService } from './services/imou-device.service';
+import { ImouLiveService } from './services/imou-live.service';
 import { SubAccountTokenManagerService } from './services/sub-account-token-manager.service';
 
 import { ImouDeviceController } from './controllers/imou-device.controller';
+import { ImouLiveController } from './controllers/imou-live.controller';
 
 @Module({
   imports: [
@@ -19,14 +21,15 @@ import { ImouDeviceController } from './controllers/imou-device.controller';
       maxRedirects: 5,
     }),
   ],
-  controllers: [ImouDeviceController],
+  controllers: [ImouDeviceController, ImouLiveController],
   providers: [
     ImouApiHelper,
     ImouAdminService,
     ImouSubAccountService,
     ImouDeviceService,
+    ImouLiveService,
     SubAccountTokenManagerService,
   ],
-  exports: [ImouAdminService, ImouSubAccountService, ImouDeviceService],
+  exports: [ImouAdminService, ImouSubAccountService, ImouDeviceService, ImouLiveService],
 })
 export class ImouModule { }

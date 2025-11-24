@@ -54,19 +54,18 @@ export class SubAccountTokenManagerService {
         );
 
         // Calculate expiration time (current time + expireTime in seconds)
-        const expireTime = BigInt(Date.now()) + BigInt(tokenResult.expireTime * 1000);
+        const expireTime = BigInt(Date.now()) + BigInt(tokenResult.data.expireTime * 1000);
 
         // Update cache in database
         await this.prisma.user.update({
             where: { id: user.id },
             data: {
-                accessToken: tokenResult.accessToken,
+                accessToken: tokenResult.data.accessToken,
                 tokenExpireTime: expireTime,
             },
         });
-
         this.logger.log(`Token refreshed and cached for openid: ${openid}`);
-        return tokenResult.accessToken;
+        return tokenResult.data.accessToken;
     }
 
     /**

@@ -120,6 +120,48 @@ export interface BindDeviceResult {
   code: string;
 }
 
+// Job Schedule for Live Stream
+export interface JobSchedule {
+  period: string; // e.g., "always"
+  status: boolean; // true = active, false = inactive
+}
+
+// Stream Information
+export interface StreamInfo {
+  hls: string; // HLS URL (HTTP) for the stream
+  streamId: number; // Stream type (0 = HD, 1 = SD)
+  coverUrl: string; // URL of the thumbnail/cover image
+}
+
+// Bind Device Live Result
+export interface BindDeviceLiveResult {
+  liveToken: string; // Authorization token for this live stream
+  liveStatus: number; // 1 = open, 2 = paused, 3 = insufficient traffic
+  liveType: number; // 1 = device
+  deviceId: string; // Device serial number
+  channelId: string; // Channel number
+  coverUpdate: number; // Frequency (in seconds) of video cover updates
+  streams: StreamInfo[]; // Array of stream objects
+  job: JobSchedule[]; // Array of scheduling items for the live plan
+}
+
+// Policy Statement for Sub-Account Permissions
+export interface PolicyStatement {
+  permission: string; // Comma-separated: e.g., "Ptz,Talk,Config" or "Real"
+  resource: string[]; // Array of resources: "dev:<deviceId>" or "cam:<deviceId>:<channelId>"
+}
+
+// Policy Object for Add Policy Request
+export interface PolicyObject {
+  statement: PolicyStatement[];
+}
+
+// Add Policy Parameters
+export interface AddPolicyParams {
+  openid: string; // Sub-account's unique ID
+  policy: PolicyObject; // Policy object with statements
+}
+
 /**
  * Internal Token Cache Interface
  */

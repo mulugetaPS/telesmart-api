@@ -28,6 +28,7 @@ export class ImouApiHelper {
 
   /**
    * Make API call to IMOU service
+   * Returns the full result object (code, msg, data) so callers can handle error codes
    * @param endpoint API endpoint path
    * @param params Request parameters
    * @param accessToken Access token (optional)
@@ -36,7 +37,7 @@ export class ImouApiHelper {
     endpoint: string,
     params: Record<string, unknown>,
     accessToken?: string,
-  ): Promise<T> {
+  ): Promise<{ code: string; msg: string; data: T }> {
     const body = {
       id: this.generateRequestId(),
       system: this.generateSystemParams(),
@@ -52,19 +53,10 @@ export class ImouApiHelper {
         ),
       );
 
-      const { result } = data;
 
-      if (result.code !== '0') {
-        throw new HttpException(
-          `IMOU API Error: ${result.msg} (${result.code})`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      return result.data;
+      // Return the entire result object (code, msg, data)
+      return data.result;
     } catch (error) {
-      if (error instanceof HttpException) throw error;
-
       this.logger.error(`API call failed: ${endpoint}`, error);
       throw new HttpException(
         'Failed to communicate with IMOU service',

@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import appConfig from './config/app.config';
 import ftpConfig from './config/ftp.config';
 import imouConfig from './config/imou.config';
+import { CacheModule } from './cache/cache.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AuthModule } from './auth/auth.module';
@@ -20,6 +21,7 @@ import { CameraModule } from './camera/camera.module';
       load: [appConfig, ftpConfig, imouConfig],
       isGlobal: true,
     }),
+    CacheModule,
     PrismaModule,
     AuthModule,
     VideoModule,

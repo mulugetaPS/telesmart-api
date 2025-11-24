@@ -47,15 +47,11 @@ export class ImouDeviceController {
     @CurrentUserOpenId() openid: string,
     @Query() dto: GetSubAccountDevicesDto,
   ) {
-    const result = await this.deviceService.getSubAccountDeviceList(
+    return await this.deviceService.getSubAccountDeviceList(
       openid,
       dto.pageNo || 1,
       dto.pageSize || 10,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Get('live-stream')
@@ -67,17 +63,16 @@ export class ImouDeviceController {
     status: 200,
     description: 'Live stream URLs retrieved successfully',
   })
-  async getLiveStream(@Query() dto: GetLiveStreamDto) {
-    const result = await this.deviceService.getLiveStreamUrl(
-      dto.token,
+  async getLiveStream(
+    @CurrentUserOpenId() openid: string,
+    @Query() dto: GetLiveStreamDto,
+  ) {
+    return await this.deviceService.getLiveStreamUrl(
+      openid,
       dto.deviceId,
       dto.channelId || 0,
       dto.streamId || 0,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Post('ptz/control')
@@ -90,18 +85,17 @@ export class ImouDeviceController {
     status: 200,
     description: 'PTZ control executed successfully',
   })
-  async controlPtz(@Body() dto: PtzControlDto) {
-    const result = await this.deviceService.controlPtz(
-      dto.token,
+  async controlPtz(
+    @CurrentUserOpenId() openid: string,
+    @Body() dto: PtzControlDto,
+  ) {
+    return await this.deviceService.controlPtz(
+      openid,
       dto.deviceId,
       dto.operation,
       dto.channelId || 0,
       dto.duration || 1000,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Get('status/online')
@@ -114,15 +108,14 @@ export class ImouDeviceController {
     status: 200,
     description: 'Device online status retrieved successfully',
   })
-  async getDeviceOnline(@Query() dto: GetDeviceOnlineDto) {
-    const result = await this.deviceService.getDeviceOnlineStatus(
-      dto.token,
+  async getDeviceOnline(
+    @CurrentUserOpenId() openid: string,
+    @Query() dto: GetDeviceOnlineDto,
+  ) {
+    return await this.deviceService.getDeviceOnlineStatus(
+      openid,
       dto.deviceId,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Get('status/binding')
@@ -135,15 +128,14 @@ export class ImouDeviceController {
     status: 200,
     description: 'Device binding status retrieved successfully',
   })
-  async checkDeviceBinding(@Query() dto: CheckDeviceBindingDto) {
-    const result = await this.deviceService.checkDeviceBindingStatus(
-      dto.token,
+  async checkDeviceBinding(
+    @CurrentUserOpenId() openid: string,
+    @Query() dto: CheckDeviceBindingDto,
+  ) {
+    return await this.deviceService.checkDeviceBindingStatus(
+      openid,
       dto.deviceId,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Post('bind')
@@ -157,18 +149,16 @@ export class ImouDeviceController {
     status: 200,
     description: 'Device bound successfully',
   })
-  async bindDevice(@Body() dto: BindDeviceDto) {
-    const result = await this.deviceService.bindDevice(
-      dto.token,
+  async bindDevice(
+    @CurrentUserOpenId() openid: string,
+    @Body() dto: BindDeviceDto,
+  ) {
+    return await this.deviceService.bindDevice(
+      openid,
       dto.deviceId,
       dto.code,
       dto.encryptCode,
     );
-    return {
-      success: true,
-      message: 'Device bound successfully',
-      data: result,
-    };
   }
 
   @Post('unbind')
@@ -182,15 +172,13 @@ export class ImouDeviceController {
     status: 200,
     description: 'Device unbound successfully',
   })
-  async unbindDevice(@Body() dto: UnbindDeviceDto) {
-    const result = await this.deviceService.unbindDevice(
-      dto.token,
+  async unbindDevice(
+    @CurrentUserOpenId() openid: string,
+    @Body() dto: UnbindDeviceDto,
+  ) {
+    return await this.deviceService.unbindDevice(
+      openid,
       dto.deviceId,
     );
-    return {
-      success: true,
-      message: 'Device unbound successfully',
-      data: result,
-    };
   }
 }

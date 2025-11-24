@@ -36,14 +36,6 @@ export class GetSubAccountDevicesDto {
 
 export class GetLiveStreamDto {
   @ApiProperty({
-    description: 'User access token',
-    example: 'At_00000ad9e6e87f0142eb92e207aec46a',
-  })
-  @IsString()
-  @IsNotEmpty()
-  token: string;
-
-  @ApiProperty({
     description: 'Device serial number',
     example: 'TESTQWERXXXX',
   })
@@ -76,14 +68,6 @@ export class GetLiveStreamDto {
 }
 
 export class PtzControlDto {
-  @ApiProperty({
-    description: 'User access token',
-    example: 'At_00000ad9e6e87f0142eb92e207aec46a',
-  })
-  @IsString()
-  @IsNotEmpty()
-  token: string;
-
   @ApiProperty({
     description: 'Device serial number',
     example: 'TESTQWERXXXX',
@@ -125,14 +109,6 @@ export class PtzControlDto {
 
 export class GetDeviceOnlineDto {
   @ApiProperty({
-    description: 'User access token (admin or sub-account)',
-    example: 'At_00000ad9e6e87f0142eb92e207aec46a',
-  })
-  @IsString()
-  @IsNotEmpty()
-  token: string;
-
-  @ApiProperty({
     description: 'Device serial number',
     example: 'TESTQWERXXXX',
   })
@@ -143,14 +119,6 @@ export class GetDeviceOnlineDto {
 
 export class CheckDeviceBindingDto {
   @ApiProperty({
-    description: 'User access token (admin or sub-account)',
-    example: 'At_00000ad9e6e87f0142eb92e207aec46a',
-  })
-  @IsString()
-  @IsNotEmpty()
-  token: string;
-
-  @ApiProperty({
     description: 'Device serial number',
     example: 'TESTQWERXXXX',
   })
@@ -160,14 +128,6 @@ export class CheckDeviceBindingDto {
 }
 
 export class BindDeviceDto {
-  @ApiProperty({
-    description: 'Administrator access token',
-    example: 'At_00000ad9e6e87f0142eb92e207aec46a',
-  })
-  @IsString()
-  @IsNotEmpty()
-  token: string;
-
   @ApiProperty({
     description: 'Device serial number',
     example: 'TESTQWERXXXX',
@@ -197,14 +157,6 @@ export class BindDeviceDto {
 }
 
 export class UnbindDeviceDto {
-  @ApiProperty({
-    description: 'User access token (admin or sub-account)',
-    example: 'At_00000ad9e6e87f0142eb92e207aec46a',
-  })
-  @IsString()
-  @IsNotEmpty()
-  token: string;
-
   @ApiProperty({
     description: 'Device serial number',
     example: 'TESTQWERXXXX',

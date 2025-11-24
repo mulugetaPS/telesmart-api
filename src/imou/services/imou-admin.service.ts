@@ -14,7 +14,7 @@ export class ImouAdminService {
   private readonly logger = new Logger(ImouAdminService.name);
   private adminTokenCache: TokenCache | null = null;
 
-  constructor(private readonly apiHelper: ImouApiHelper) {}
+  constructor(private readonly apiHelper: ImouApiHelper) { }
 
   /**
    * Get administrative access token (with caching)
@@ -25,18 +25,18 @@ export class ImouAdminService {
     }
 
     try {
-      const response = await this.apiHelper.makeApiCall<AccessTokenResult>(
+      const result = await this.apiHelper.makeApiCall<AccessTokenResult>(
         '/openapi/accessToken',
         {},
       );
 
       this.adminTokenCache = {
-        token: response.accessToken,
-        expireTime: Date.now() + response.expireTime * 1000,
+        token: result.data.accessToken,
+        expireTime: Date.now() + result.data.expireTime * 1000,
       };
 
       this.logger.log('Admin access token refreshed');
-      return response.accessToken;
+      return result.data.accessToken;
     } catch (error) {
       this.logger.error('Failed to get admin access token', error);
       throw new HttpException(

@@ -87,12 +87,12 @@ export class AuthService {
           user = await this.prisma.user.update({
             where: { id: user.id },
             data: {
-              openid: imouSubAccount.openid,
+              openid: imouSubAccount.data.openid,
             },
           });
 
           this.logger.log(
-            `IMOU sub-account created for user ${user.id}: ${imouSubAccount.openid}`,
+            `IMOU sub-account created for user ${user.id}: ${imouSubAccount.data.openid}`,
           );
         } catch (imouError) {
           // Log error but don't fail registration
